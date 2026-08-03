@@ -380,6 +380,51 @@ export default function CustomerDashboard({
               </div>
             )}
           </div>
+
+          {/* MY BOOKINGS & SERVICE RECORDS HISTORY CARD */}
+          <div className="rounded-3xl bg-[#121824] border border-[#1e293b] p-6 space-y-4 shadow-xl text-white">
+            <div className="flex items-center justify-between border-b border-[#1e293b] pb-3">
+              <div>
+                <h3 className="text-lg font-black tracking-tight">My Bookings & Service History ({bookings.length})</h3>
+                <p className="text-xs text-slate-400 mt-0.5">All active and previous trade bookings saved in MongoDB Atlas.</p>
+              </div>
+              <button
+                onClick={onNewBookingClick}
+                className="px-3.5 py-1.5 bg-[#0ea5e9] hover:bg-sky-400 text-slate-950 font-black rounded-xl text-xs flex items-center gap-1 shadow-md"
+              >
+                + Book New Service
+              </button>
+            </div>
+
+            <div className="divide-y divide-[#1e293b] max-h-72 overflow-y-auto pr-1">
+              {bookings.map((b) => (
+                <div key={b.id} className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-sky-400 font-bold">#{b.bookingRef}</span>
+                      <h4 className="font-bold text-white">{b.serviceTitle}</h4>
+                    </div>
+                    <p className="text-slate-400 mt-0.5">{b.address}, {b.postcode} &bull; {b.scheduledDate}</p>
+                  </div>
+
+                  <div className="flex items-center gap-3 shrink-0 justify-between sm:justify-end">
+                    <span className="font-mono font-bold text-emerald-400">£{(b.pricing?.total || 150).toFixed(2)}</span>
+                    <span
+                      className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase ${
+                        b.status === 'completed'
+                          ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                          : b.status === 'assigned' || b.status === 'en_route'
+                          ? 'bg-sky-500/20 text-sky-400 border border-sky-500/30'
+                          : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                      }`}
+                    >
+                      {b.status}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 

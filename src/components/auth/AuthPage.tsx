@@ -153,15 +153,7 @@ export default function AuthPage({ onLoginSuccess, onExploreDemo, isDark = true 
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <button
-            onClick={onExploreDemo}
-            className="px-4 py-2.5 rounded-2xl bg-slate-900/90 hover:bg-slate-800 text-slate-200 border border-slate-700/80 text-xs font-black flex items-center gap-2 backdrop-blur-md shadow-lg transition-all hover:scale-105"
-          >
-            <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
-            <span>Explore Demo Mode</span>
-          </button>
-        </div>
+
       </header>
 
       {/* Main Content Layout */}
