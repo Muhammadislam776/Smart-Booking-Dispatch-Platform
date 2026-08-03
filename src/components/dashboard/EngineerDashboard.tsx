@@ -257,7 +257,7 @@ export default function EngineerDashboard({
         totalAmount: totalVal * 1.2,
         serviceTitle: jobToUse.serviceTitle || 'Emergency Boiler Repair & Diagnostics',
         items: [
-          { description: jobToUse.serviceTitle || 'Emergency Trade Service Callout', quantity: 1, unitPrice: totalVal, total: totalVal },
+          { description: jobToUse.serviceTitle || 'Emergency Trade Service Callout', quantity: 1, unitPrice: totalVal, amount: totalVal, total: totalVal },
         ],
       };
       const biz: any = {
