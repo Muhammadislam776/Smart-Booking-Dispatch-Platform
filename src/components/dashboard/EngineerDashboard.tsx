@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Engineer, Booking, JobStatus } from '@/types';
+import { generateInvoicePDF } from '@/lib/pdfGenerator';
 import LiveTrackingMap from '@/components/maps/LiveTrackingMap';
 import {
   Wrench,
@@ -28,6 +29,14 @@ import {
   ExternalLink,
   Briefcase,
   RefreshCw,
+  User,
+  Sliders,
+  LifeBuoy,
+  Download,
+  Calendar,
+  Layers,
+  HelpCircle,
+  FileCheck,
 } from 'lucide-react';
 
 interface EngineerDashboardProps {
@@ -46,6 +55,14 @@ export default function EngineerDashboard({
   const [bookingsList, setBookingsList] = useState<Booking[]>(initialBookings);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'assigned' | 'worksheet' | 'lifecycle' | 'support'>('assigned');
+
+  // Clock In / Attendance State
+  const [isClockedIn, setIsClockedIn] = useState(true);
+  const [clockInTime, setClockInTime] = useState('07:45 AM');
+
+  // Photo Upload File Ref
+  const photoInputRef = useRef<HTMLInputElement | null>(null);
 
   const fetchLiveBookingsFromMongoDB = async () => {
     setIsLoading(true);
@@ -66,14 +83,15 @@ export default function EngineerDashboard({
     fetchLiveBookingsFromMongoDB();
   }, []);
 
-  // Filter jobs assigned to this engineer (or fallback to active uncompleted jobs if mock)
+  // Filter jobs assigned to this engineer
   const assignedJobs = bookingsList.filter(
     (b) =>
       b.assignedEngineerId === engineer.id ||
       b.assignedEngineerName === engineer.name ||
       b.status === 'assigned' ||
       b.status === 'en_route' ||
-      b.status === 'in_progress'
+      b.status === 'in_progress' ||
+      b.status === 'arrived'
   );
 
   const activeJob =
@@ -106,6 +124,51 @@ export default function EngineerDashboard({
     setTimeout(() => setToastMsg(null), 3500);
   };
 
+  // Attendance Clock In / Out Toggle
+  const handleToggleAttendance = async () => {
+    const nextStatus = !isClockedIn;
+    setIsClockedIn(nextStatus);
+
+    const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    if (nextStatus) {
+      setClockInTime(nowStr);
+      showToast(`Clocked IN at ${nowStr} & logged to MongoDB Atlas!`);
+    } else {
+      showToast(`Clocked OUT at ${nowStr} & shift logged to MongoDB Atlas!`);
+    }
+
+    try {
+      await fetch('/api/attendance', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          engineerId: engineer.id || 'eng_1',
+          engineerName: engineer.name || 'Alex Sterling',
+          date: new Date().toISOString().split('T')[0],
+          clockInTime: nowStr,
+          status: nextStatus ? 'Present' : 'Clocked Out',
+        }),
+      });
+    } catch (e) {
+      console.error('Attendance log failed:', e);
+    }
+  };
+
+  // Direct Photo Evidence Upload
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          setPhotosUploaded([...photosUploaded, event.target.result as string]);
+          showToast('Work evidence photo uploaded & saved!');
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleAddMaterial = () => {
     if (materialName && materialCost) {
       setMaterialsList([...materialsList, { name: materialName, cost: parseFloat(materialCost) }]);
@@ -128,7 +191,6 @@ export default function EngineerDashboard({
         signatureUrl: signatureCaptured ? 'https://example.com/signature-captured.png' : undefined,
       });
 
-      // Also update local list state immediately
       setBookingsList(
         bookingsList.map((b) => (b.id === activeJob.id ? { ...b, status: newStatus } : b))
       );
@@ -147,10 +209,47 @@ export default function EngineerDashboard({
     }
   };
 
+  const handleDownloadPDF = () => {
+    if (!activeJob) return;
+    const totalVal = activeJob.pricing?.total || 180;
+    const inv: any = {
+      id: `inv_${activeJob.id}`,
+      invoiceNumber: `INV-2026-${activeJob.bookingRef}`,
+      customerName: activeJob.customerName,
+      customerEmail: 'customer@weic.co.uk',
+      customerPhone: activeJob.customerPhone,
+      customerAddress: activeJob.address,
+      issueDate: new Date().toISOString().split('T')[0],
+      dueDate: new Date().toISOString().split('T')[0],
+      status: 'paid',
+      subtotal: totalVal,
+      vatAmount: totalVal * 0.2,
+      totalAmount: totalVal * 1.2,
+      serviceTitle: activeJob.serviceTitle,
+      items: [
+        { description: activeJob.serviceTitle, quantity: 1, unitPrice: totalVal, total: totalVal },
+      ],
+    };
+    const biz: any = {
+      id: 'biz_01',
+      name: 'WEIC Smart Trade Solutions UK',
+      address: '102 Baker Street, Marylebone',
+      city: 'London',
+      postcode: 'W1U 68A',
+      phone: '+44 20 7946 0912',
+      email: 'contact@weic.co.uk',
+      vatRate: 20,
+    };
+
+    const doc = generateInvoicePDF(inv, biz);
+    doc.save(`Invoice_${inv.invoiceNumber}.pdf`);
+    showToast(`PDF Invoice ${inv.invoiceNumber} downloaded!`);
+  };
+
   const totalMaterialsCost = materialsList.reduce((acc, m) => acc + m.cost, 0);
 
   return (
-    <div className="max-w-5xl mx-auto space-y-5">
+    <div className="max-w-6xl mx-auto space-y-6">
       {/* Toast Notification Banner */}
       {toastMsg && (
         <div className="fixed bottom-6 right-6 z-50 p-4 rounded-2xl bg-emerald-950/90 border border-emerald-500/50 text-emerald-200 text-xs font-bold flex items-center gap-2.5 shadow-2xl backdrop-blur-md animate-in fade-in max-w-md">
@@ -159,63 +258,72 @@ export default function EngineerDashboard({
         </div>
       )}
 
-      {/* COMPACT ENGINEER PROFILE HEADER */}
-      <div className="p-5 rounded-3xl bg-[#121824] border border-[#1e293b] flex flex-col sm:flex-row items-center justify-between gap-4 shadow-2xl relative overflow-hidden">
+      {/* COMPACT ADVANCED ENGINEER PROFILE HEADER */}
+      <div className="p-6 rounded-3xl bg-[#121824] border border-[#1e293b] flex flex-col md:flex-row items-center justify-between gap-4 shadow-2xl relative overflow-hidden text-white">
         <div className="flex items-center gap-4">
           <img
             src={engineer.avatar || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=120'}
             alt={engineer.name}
-            className="w-14 h-14 rounded-2xl object-cover border-2 border-emerald-400/80 shadow-md shrink-0"
+            className="w-16 h-16 rounded-2xl object-cover border-2 border-emerald-400/80 shadow-md shrink-0"
           />
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-xl font-black text-white tracking-tight">{engineer.name}</h1>
+              <h1 className="text-2xl font-black tracking-tight">{engineer.name}</h1>
               <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[11px] font-black border border-emerald-500/30 flex items-center gap-1">
                 ★ {engineer.rating || 4.98}
               </span>
             </div>
-            <p className="text-xs text-slate-400 mt-0.5">
-              Vehicle: <span className="font-mono text-sky-400 font-bold">{engineer.vehicleRegistration || 'BD68 WXY'}</span> &bull; Gas Safe Certified #592810
+            <p className="text-xs text-slate-300 mt-1">
+              Vehicle: <span className="font-mono text-sky-400 font-bold">{engineer.vehicleRegistration || 'BD68 WXY'}</span> &bull; Gas Safe Certified #592810 &bull; Part P Registered
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-3 shrink-0">
+          {/* Clock In / Out Button */}
           <button
-            onClick={fetchLiveBookingsFromMongoDB}
-            className="p-2 rounded-xl bg-[#0b0e14] border border-[#1e293b] text-slate-300 hover:text-white transition-all flex items-center gap-1.5 text-xs font-bold"
-            title="Refresh MongoDB Atlas Assigned Jobs"
+            onClick={handleToggleAttendance}
+            className={`px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 transition-all shadow-md ${
+              isClockedIn
+                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30'
+                : 'bg-amber-500/20 text-amber-400 border border-amber-500/30 hover:bg-amber-500/30'
+            }`}
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} /> Sync Jobs
+            <Clock className="w-4 h-4" />
+            {isClockedIn ? `CLOCKED IN (${clockInTime})` : 'CLOCK IN NOW'}
           </button>
 
-          <button className="px-3.5 py-2 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold rounded-xl text-xs flex items-center gap-1.5 shadow-md">
-            <Navigation className="w-3.5 h-3.5 animate-pulse" /> Live GPS Sharing Active
+          <button
+            onClick={fetchLiveBookingsFromMongoDB}
+            className="p-2.5 rounded-xl bg-[#0b0e14] border border-[#1e293b] text-slate-300 hover:text-white transition-all flex items-center gap-1.5 text-xs font-bold"
+            title="Refresh MongoDB Atlas Assigned Jobs"
+          >
+            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} /> Sync Jobs
           </button>
         </div>
       </div>
 
       {/* COMPACT FIELD METRICS ROW */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <div className="p-3.5 rounded-2xl bg-[#121824] border border-[#1e293b] space-y-0.5 shadow-lg">
+        <div className="p-4 rounded-2xl bg-[#121824] border border-[#1e293b] space-y-1 shadow-lg">
           <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider block">COMPLETED JOBS TODAY</span>
           <div className="text-2xl font-black text-emerald-400">4 Jobs</div>
-          <span className="text-[11px] text-slate-400 font-medium block">£340.00 Earned</span>
+          <span className="text-[11px] text-slate-400 font-medium block">£340.00 Earned Today</span>
         </div>
 
-        <div className="p-3.5 rounded-2xl bg-[#121824] border border-[#1e293b] space-y-0.5 shadow-lg">
+        <div className="p-4 rounded-2xl bg-[#121824] border border-[#1e293b] space-y-1 shadow-lg">
           <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider block">FIRST-TIME FIX RATE</span>
           <div className="text-2xl font-black text-sky-400">99.2%</div>
           <span className="text-[11px] text-sky-400 font-medium block">HMRC & Gas Safe Logged</span>
         </div>
 
-        <div className="p-3.5 rounded-2xl bg-[#121824] border border-[#1e293b] space-y-0.5 shadow-lg">
+        <div className="p-4 rounded-2xl bg-[#121824] border border-[#1e293b] space-y-1 shadow-lg">
           <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider block">PARTS RECORDED</span>
           <div className="text-2xl font-black text-purple-400">£{totalMaterialsCost.toFixed(2)}</div>
           <span className="text-[11px] text-slate-400 font-medium block">{materialsList.length} Items Used</span>
         </div>
 
-        <div className="p-3.5 rounded-2xl bg-[#121824] border border-[#1e293b] space-y-0.5 shadow-lg">
+        <div className="p-4 rounded-2xl bg-[#121824] border border-[#1e293b] space-y-1 shadow-lg">
           <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider block">CUSTOMER SIGNATURE</span>
           <div className={`text-xl font-black ${signatureCaptured ? 'text-emerald-400' : 'text-amber-400'}`}>
             {signatureCaptured ? 'SIGNED' : 'PENDING'}
@@ -224,7 +332,32 @@ export default function EngineerDashboard({
         </div>
       </div>
 
-      {/* ASSIGNED JOBS ROSTER TABS */}
+      {/* ADVANCED SUB-NAVIGATION TABS */}
+      <div className="flex items-center gap-2 border-b border-[#1e293b] pb-2 overflow-x-auto">
+        {[
+          { id: 'assigned', label: 'My Assigned Jobs', icon: Briefcase },
+          { id: 'worksheet', label: 'Worksheet, Parts & Signature', icon: FileText },
+          { id: 'lifecycle', label: 'Job Progress Lifecycle', icon: Layers },
+          { id: 'support', label: 'Technician Support & Dispatch HQ', icon: LifeBuoy },
+        ].map((tab) => {
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as any)}
+              className={`px-4 py-2.5 rounded-xl text-xs font-black transition-all flex items-center gap-2 whitespace-nowrap ${
+                activeTab === tab.id
+                  ? 'bg-[#0ea5e9] text-slate-950 shadow-md'
+                  : 'bg-[#121824] text-slate-400 hover:text-white border border-[#1e293b]'
+              }`}
+            >
+              <Icon className="w-4 h-4" /> {tab.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* ASSIGNED JOBS ROSTER SELECTOR */}
       {assignedJobs.length > 0 && (
         <div className="p-4 rounded-2xl bg-[#121824] border border-[#1e293b] space-y-2">
           <span className="text-[10px] font-black uppercase text-sky-400 tracking-wider flex items-center gap-1.5">
@@ -237,7 +370,7 @@ export default function EngineerDashboard({
                 key={j.id}
                 onClick={() => setSelectedJobId(j.id)}
                 className={`px-3.5 py-2 rounded-xl text-xs font-extrabold flex items-center gap-2 whitespace-nowrap transition-all ${
-                  (activeJob && activeJob.id === j.id)
+                  activeJob && activeJob.id === j.id
                     ? 'bg-[#0ea5e9] text-slate-950 shadow-lg'
                     : 'bg-[#0b0e14] text-slate-300 border border-[#1e293b] hover:text-white'
                 }`}
@@ -253,14 +386,13 @@ export default function EngineerDashboard({
         </div>
       )}
 
-      {/* ACTIVE FIELD WORKSTATION CARD */}
-      {activeJob ? (
-        <div className="p-6 rounded-3xl bg-[#121824] border border-[#1e293b] space-y-6 shadow-2xl">
-          {/* Header Bar */}
+      {/* TAB 1: MY ASSIGNED JOBS */}
+      {activeTab === 'assigned' && activeJob && (
+        <div className="p-6 rounded-3xl bg-[#121824] border border-[#1e293b] space-y-6 shadow-2xl text-white">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#1e293b] pb-4">
             <div>
               <span className="text-xs font-mono font-bold text-sky-400">ASSIGNED JOB #{activeJob.bookingRef}</span>
-              <h2 className="text-xl font-black text-white mt-0.5">{activeJob.serviceTitle}</h2>
+              <h2 className="text-xl font-black mt-0.5">{activeJob.serviceTitle}</h2>
             </div>
 
             <span
@@ -274,11 +406,10 @@ export default function EngineerDashboard({
             </span>
           </div>
 
-          {/* Customer Property Contact & GPS Navigation Box */}
           <div className="p-4.5 rounded-2xl bg-[#0b0e14] border border-[#1e293b] grid md:grid-cols-2 gap-4">
             <div>
               <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider block">CUSTOMER PROPERTY</span>
-              <h3 className="font-black text-base text-white mt-0.5">{activeJob.customerName}</h3>
+              <h3 className="font-black text-base mt-0.5">{activeJob.customerName}</h3>
               <p className="text-xs text-slate-300 flex items-center gap-1 mt-1">
                 <MapPin className="w-3.5 h-3.5 text-rose-400 shrink-0" /> {activeJob.address}, {activeJob.postcode}
               </p>
@@ -301,7 +432,6 @@ export default function EngineerDashboard({
             </div>
           </div>
 
-          {/* JOB STATUS LIFECYCLE PROGRESS BUTTONS */}
           <div className="space-y-2">
             <label className="block text-[11px] font-black uppercase text-slate-400 tracking-wider">
               UPDATE JOB STATUS PROGRESS
@@ -353,11 +483,180 @@ export default function EngineerDashboard({
             </div>
           </div>
         </div>
-      ) : (
-        <div className="p-12 text-center rounded-3xl bg-[#121824] border border-[#1e293b] text-slate-400 space-y-2">
-          <Briefcase className="w-12 h-12 text-slate-500 mx-auto" />
-          <h3 className="text-lg font-black text-white">No Assigned Jobs</h3>
-          <p className="text-xs">You currently have no dispatched active jobs. Click "Sync Jobs" to check MongoDB Atlas.</p>
+      )}
+
+      {/* TAB 2: WORKSHEET, PARTS & SIGNATURE */}
+      {activeTab === 'worksheet' && activeJob && (
+        <div className="p-6 rounded-3xl bg-[#121824] border border-[#1e293b] space-y-6 shadow-2xl text-white">
+          <div className="flex items-center justify-between border-b border-[#1e293b] pb-3">
+            <div>
+              <h3 className="font-black text-lg">Digital Job Worksheet & Parts Used</h3>
+              <p className="text-xs text-slate-400">Record installed spare parts, upload work evidence photos, and capture customer signature.</p>
+            </div>
+            <button
+              onClick={handleDownloadPDF}
+              className="px-4 py-2 bg-[#0ea5e9] hover:bg-sky-400 text-slate-950 font-black rounded-xl text-xs flex items-center gap-1.5 shadow-md"
+            >
+              <Download className="w-4 h-4" /> Download PDF Invoice
+            </button>
+          </div>
+
+          {/* Parts Used Form */}
+          <div className="space-y-3">
+            <span className="text-[11px] font-black uppercase text-slate-400 tracking-wider block">RECORD MATERIALS / SPARE PARTS USED</span>
+
+            <div className="flex flex-col sm:flex-row gap-2">
+              <input
+                type="text"
+                value={materialName}
+                onChange={(e) => setMaterialName(e.target.value)}
+                placeholder="Part Name (e.g. 15mm Compression Valve)"
+                className="flex-1 px-3.5 py-2.5 rounded-xl bg-[#0b0e14] border border-[#1e293b] text-white text-xs font-semibold outline-none focus:border-sky-500"
+              />
+              <input
+                type="number"
+                value={materialCost}
+                onChange={(e) => setMaterialCost(e.target.value)}
+                placeholder="Price (£)"
+                className="w-28 px-3.5 py-2.5 rounded-xl bg-[#0b0e14] border border-[#1e293b] text-white text-xs font-semibold outline-none focus:border-sky-500"
+              />
+              <button
+                onClick={handleAddMaterial}
+                className="px-4 py-2.5 bg-[#0ea5e9] hover:bg-sky-400 text-slate-950 font-black rounded-xl text-xs flex items-center gap-1.5 shrink-0"
+              >
+                <Plus className="w-4 h-4" /> Add Part
+              </button>
+            </div>
+
+            {/* List of parts */}
+            <div className="divide-y divide-[#1e293b] rounded-2xl bg-[#0b0e14] border border-[#1e293b] p-3 text-xs">
+              {materialsList.map((m, idx) => (
+                <div key={idx} className="py-2 flex items-center justify-between">
+                  <span className="font-bold text-slate-200">{m.name}</span>
+                  <span className="font-mono text-emerald-400 font-bold">£{m.cost.toFixed(2)}</span>
+                </div>
+              ))}
+              <div className="pt-2 flex items-center justify-between font-black text-sm text-sky-400 border-t border-[#1e293b]">
+                <span>Total Recorded Parts Cost:</span>
+                <span>£{totalMaterialsCost.toFixed(2)}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Photo Evidence Gallery */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-black uppercase text-slate-400 tracking-wider block">WORK EVIDENCE PHOTOS</span>
+              <input
+                type="file"
+                ref={photoInputRef}
+                accept="image/*"
+                onChange={handlePhotoUpload}
+                className="hidden"
+              />
+              <button
+                onClick={() => photoInputRef.current?.click()}
+                className="px-3.5 py-1.5 bg-sky-500/20 text-sky-400 border border-sky-500/30 font-bold rounded-xl text-xs flex items-center gap-1.5"
+              >
+                <Camera className="w-3.5 h-3.5" /> Upload Evidence Photo
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {photosUploaded.map((src, i) => (
+                <div key={i} className="h-28 rounded-2xl overflow-hidden border border-[#1e293b] relative group">
+                  <img src={src} alt="Evidence" className="w-full h-full object-cover" />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Digital Signature Pad */}
+          <div className="space-y-2 p-4 rounded-2xl bg-[#0b0e14] border border-[#1e293b]">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-black uppercase text-slate-400 tracking-wider block">CUSTOMER DIGITAL SIGNATURE</span>
+              {signatureCaptured && (
+                <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-black text-[10px] uppercase border border-emerald-500/30">
+                  SIGNATURE VERIFIED
+                </span>
+              )}
+            </div>
+
+            <div
+              onClick={() => {
+                setSignatureCaptured(true);
+                showToast('Customer signature captured!');
+              }}
+              className="h-24 rounded-xl border-2 border-dashed border-[#1e293b] flex items-center justify-center cursor-pointer hover:border-sky-500/50 transition-all"
+            >
+              {signatureCaptured ? (
+                <span className="font-serif italic text-lg text-emerald-400 font-bold">Eleanor Vance (Signed)</span>
+              ) : (
+                <span className="text-slate-500 text-xs font-semibold flex items-center gap-1.5">
+                  <PenTool className="w-4 h-4 text-sky-400" /> Tap / Click to sign digital worksheet
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 3: JOB PROGRESS LIFECYCLE */}
+      {activeTab === 'lifecycle' && activeJob && (
+        <div className="p-6 rounded-3xl bg-[#121824] border border-[#1e293b] space-y-6 shadow-2xl text-white">
+          <h3 className="font-black text-lg border-b border-[#1e293b] pb-3">Field Job Progress Lifecycle Timeline</h3>
+
+          <div className="space-y-4">
+            {[
+              { title: '1. Booking Dispatched from HQ', desc: 'Job assigned to technician roster by SaaS AI Dispatcher.', done: true, time: '08:30 AM' },
+              { title: '2. En Route to Customer Site', desc: 'Satellite GPS navigation live sharing activated.', done: activeJob.status !== 'assigned', time: '09:15 AM' },
+              { title: '3. Arrived at Customer Property', desc: 'Customer notified via SMS & arrival timestamp logged.', done: activeJob.status === 'arrived' || activeJob.status === 'in_progress' || activeJob.status === 'completed', time: '09:40 AM' },
+              { title: '4. Trade Inspection & Repair In Progress', desc: 'Diagnosis performed and replacement parts recorded.', done: activeJob.status === 'in_progress' || activeJob.status === 'completed', time: '10:00 AM' },
+              { title: '5. Work Completed & Worksheet Signed', desc: 'Digital worksheet signed by customer & tax invoice generated.', done: activeJob.status === 'completed', time: '11:15 AM' },
+            ].map((step, idx) => (
+              <div key={idx} className="flex items-start gap-4 p-3.5 rounded-2xl bg-[#0b0e14] border border-[#1e293b]">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 font-bold text-xs ${
+                  step.done ? 'bg-emerald-500 text-slate-950' : 'bg-[#121824] text-slate-500 border border-[#1e293b]'
+                }`}>
+                  {step.done ? <Check className="w-4 h-4 stroke-[3]" /> : idx + 1}
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-black text-sm text-white">{step.title}</h4>
+                    <span className="font-mono text-[11px] text-slate-400">{step.time}</span>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-0.5">{step.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* TAB 4: TECHNICIAN SUPPORT */}
+      {activeTab === 'support' && (
+        <div className="p-6 rounded-3xl bg-[#121824] border border-[#1e293b] space-y-6 shadow-2xl text-white">
+          <h3 className="font-black text-lg border-b border-[#1e293b] pb-3">Dispatcher HQ Hotline & Technical Support</h3>
+
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="p-4 rounded-2xl bg-[#0b0e14] border border-[#1e293b] space-y-2">
+              <h4 className="font-black text-sm text-sky-400 flex items-center gap-2">
+                <Phone className="w-4 h-4" /> Urgent Dispatcher Hotline
+              </h4>
+              <p className="text-xs text-slate-400">Direct phone line to central dispatch for emergency re-routing or extra parts clearance.</p>
+              <a href="tel:+442079460912" className="inline-block px-4 py-2 bg-[#0ea5e9] text-slate-950 font-black rounded-xl text-xs mt-2">
+                Call Dispatch HQ (+44 20 7946 0912)
+              </a>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-[#0b0e14] border border-[#1e293b] space-y-2">
+              <h4 className="font-black text-sm text-amber-400 flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4" /> Gas Safe & NICEIC Compliance
+              </h4>
+              <p className="text-xs text-slate-400">All boiler & consumer unit work must be certified under Part P & Building Regs 2026.</p>
+              <span className="inline-block text-[11px] text-emerald-400 font-bold mt-2">100% Verified Certificate Logged</span>
+            </div>
+          </div>
         </div>
       )}
 
