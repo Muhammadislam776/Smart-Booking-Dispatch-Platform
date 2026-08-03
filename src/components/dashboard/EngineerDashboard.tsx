@@ -474,56 +474,7 @@ export default function EngineerDashboard({
             </div>
           </div>
 
-          <div className="space-y-2">
-            <label className="block text-[11px] font-black uppercase text-slate-400 tracking-wider">
-              UPDATE JOB STATUS PROGRESS
-            </label>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-              <button
-                onClick={() => handleStatusChange('en_route')}
-                className={`py-3 rounded-xl font-black text-xs flex items-center justify-center gap-1.5 transition-all ${
-                  activeJob.status === 'en_route'
-                    ? 'bg-[#0ea5e9] text-slate-950 ring-2 ring-sky-400 shadow-lg'
-                    : 'bg-[#0b0e14] text-slate-400 hover:text-white border border-[#1e293b]'
-                }`}
-              >
-                <Navigation className="w-4 h-4" /> En Route
-              </button>
 
-              <button
-                onClick={() => handleStatusChange('arrived')}
-                className={`py-3 rounded-xl font-black text-xs flex items-center justify-center gap-1.5 transition-all ${
-                  activeJob.status === 'arrived'
-                    ? 'bg-purple-600 text-white ring-2 ring-purple-400 shadow-lg'
-                    : 'bg-[#0b0e14] text-slate-400 hover:text-white border border-[#1e293b]'
-                }`}
-              >
-                <MapPin className="w-4 h-4" /> Arrived Site
-              </button>
-
-              <button
-                onClick={() => handleStatusChange('in_progress')}
-                className={`py-3 rounded-xl font-black text-xs flex items-center justify-center gap-1.5 transition-all ${
-                  activeJob.status === 'in_progress'
-                    ? 'bg-amber-500 text-slate-950 ring-2 ring-amber-400 shadow-lg'
-                    : 'bg-[#0b0e14] text-slate-400 hover:text-white border border-[#1e293b]'
-                }`}
-              >
-                <Wrench className="w-4 h-4" /> In Progress
-              </button>
-
-              <button
-                onClick={() => handleStatusChange('completed')}
-                className={`py-3 rounded-xl font-black text-xs flex items-center justify-center gap-1.5 transition-all ${
-                  activeJob.status === 'completed'
-                    ? 'bg-emerald-500 text-slate-950 ring-2 ring-emerald-400 shadow-lg'
-                    : 'bg-emerald-600 hover:bg-emerald-500 text-white'
-                }`}
-              >
-                <CheckCircle2 className="w-4 h-4" /> Complete Job
-              </button>
-            </div>
-          </div>
         </div>
       )}
 
