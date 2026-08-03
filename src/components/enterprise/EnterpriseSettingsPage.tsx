@@ -27,7 +27,7 @@ interface EnterpriseSettingsPageProps {
 }
 
 export default function EnterpriseSettingsPage({ onTabChange, isDark = true, onToggleTheme }: EnterpriseSettingsPageProps) {
-  const [cursorStyle, setCursorStyle] = useState<'default' | 'glow' | 'bubble' | 'crosshair'>('glow');
+  const [cursorStyle, setCursorStyle] = useState<'default' | 'glow' | 'bubble' | 'crosshair'>('default');
   const [colorScheme, setColorScheme] = useState<'cyan' | 'emerald' | 'purple' | 'amber'>('cyan');
   const [blurRadius, setBlurRadius] = useState<number>(12);
   const [toastMsg, setToastMsg] = useState<string | null>(null);

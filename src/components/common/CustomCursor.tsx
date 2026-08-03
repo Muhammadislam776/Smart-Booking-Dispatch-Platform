@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 
 export default function CustomCursor() {
-  const [cursorStyle, setCursorStyle] = useState<'default' | 'glow' | 'bubble' | 'crosshair'>('glow');
+  const [cursorStyle, setCursorStyle] = useState<'default' | 'glow' | 'bubble' | 'crosshair'>('default');
   const [position, setPosition] = useState({ x: -100, y: -100 });
   const [isVisible, setIsVisible] = useState(false);
 
