@@ -52,8 +52,32 @@ export default function NotificationDropdown({ isOpen, onClose, onNavigateTab }:
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  const handleMarkAllRead = () => {
+  const handleMarkAllRead = async () => {
     setNotifications(notifications.map((n) => ({ ...n, read: true })));
+    try {
+      await fetch('/api/notifications', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      });
+    } catch (err) {
+      console.error('Error marking all notifications as read in MongoDB Atlas:', err);
+    }
+  };
+
+  const handleNotificationClick = async (notifId: string) => {
+    setNotifications(notifications.map((n) => (n.id === notifId ? { ...n, read: true } : n)));
+    onClose();
+    onNavigateTab('jobs');
+    try {
+      await fetch('/api/notifications', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: notifId }),
+      });
+    } catch (err) {
+      console.error('Error updating notification in MongoDB Atlas:', err);
+    }
   };
 
   return (
@@ -66,7 +90,7 @@ export default function NotificationDropdown({ isOpen, onClose, onNavigateTab }:
               <Bell className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-black text-base text-white tracking-tight">Live Event Stream</h3>
+              <h3 className="font-black text-base text-[#ffffff] tracking-tight">Live Event Stream</h3>
               <p className="text-[11px] text-slate-400">MongoDB Atlas Connected Notifications</p>
             </div>
           </div>
@@ -107,10 +131,7 @@ export default function NotificationDropdown({ isOpen, onClose, onNavigateTab }:
           {notifications.map((n) => (
             <div
               key={n.id}
-              onClick={() => {
-                onClose();
-                onNavigateTab('jobs');
-              }}
+              onClick={() => handleNotificationClick(n.id)}
               className={`p-4 rounded-2xl border transition-all cursor-pointer space-y-1.5 relative ${
                 n.read
                   ? 'bg-[#0b0e14]/60 border-[#1e293b] opacity-80'

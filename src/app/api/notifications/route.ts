@@ -42,3 +42,23 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
+
+export async function PATCH(req: NextRequest) {
+  try {
+    await connectToDatabase();
+    const body = await req.json().catch(() => ({}));
+
+    if (body.id) {
+      await Notification.updateOne({ id: body.id }, { $set: { read: true } });
+    } else {
+      // Mark all as read in MongoDB Atlas
+      await Notification.updateMany({}, { $set: { read: true } });
+    }
+
+    console.log(`[MongoDB Atlas] Updated notifications mark read!`);
+    return NextResponse.json({ success: true, message: 'Notifications marked as read' });
+  } catch (error: any) {
+    console.error('Error updating notifications in MongoDB Atlas:', error);
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  }
+}
