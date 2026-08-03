@@ -47,7 +47,14 @@ import {
   Send,
   X,
   Zap,
+  History,
 } from 'lucide-react';
+
+import SuperAdminUsersModule from './superadmin/SuperAdminUsersModule';
+import SuperAdminSubscriptionsModule from './superadmin/SuperAdminSubscriptionsModule';
+import SuperAdminServicesModule from './superadmin/SuperAdminServicesModule';
+import SuperAdminAuditLogsModule from './superadmin/SuperAdminAuditLogsModule';
+import SuperAdminSupportTicketsModule from './superadmin/SuperAdminSupportTicketsModule';
 
 interface SuperAdminPortalProps {
   businesses: Business[];
@@ -55,7 +62,7 @@ interface SuperAdminPortalProps {
 }
 
 export default function SuperAdminPortal({ businesses, isDark = true }: SuperAdminPortalProps) {
-  const [activeTab, setActiveTab] = useState<string>('dashboard');
+  const [subTab, setSubTab] = useState<string>('dashboard');
   const [filterTier, setFilterTier] = useState<'all' | 'enterprise' | 'pro'>('all');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -179,7 +186,6 @@ export default function SuperAdminPortal({ businesses, isDark = true }: SuperAdm
 
     showToast(`Merchant ${target.name} status updated to ${nextStatus}! Synced to MongoDB Atlas.`);
 
-    // Persist to MongoDB Atlas
     try {
       await fetch('/api/merchants', {
         method: 'PATCH',
@@ -221,7 +227,6 @@ export default function SuperAdminPortal({ businesses, isDark = true }: SuperAdm
     setShowAddMerchantModal(false);
     showToast(`New merchant "${newBizName}" created & saved to MongoDB Atlas!`);
 
-    // Persist new merchant to MongoDB Atlas
     try {
       await fetch('/api/merchants', {
         method: 'POST',
@@ -255,264 +260,345 @@ export default function SuperAdminPortal({ businesses, isDark = true }: SuperAdm
         </div>
       )}
 
-      {/* DYNAMIC SYSTEM HEALTH & COMMISSION BAR */}
-      <div className="p-4 rounded-3xl bg-[#121824] border border-[#1e293b] flex flex-col md:flex-row items-center justify-between gap-4 shadow-xl">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-sky-500/20 text-sky-400 flex items-center justify-center border border-sky-500/30 font-black">
-            <Zap className="w-5 h-5" />
+      {/* SUPER ADMIN SUB-NAVIGATION NAVIGATION BAR */}
+      <div className="p-2 rounded-2xl bg-[#121824] border border-[#1e293b] flex items-center gap-1.5 overflow-x-auto text-xs font-bold shadow-md">
+        <button
+          onClick={() => setSubTab('dashboard')}
+          className={`px-4 py-2 rounded-xl flex items-center gap-2 transition-all ${
+            subTab === 'dashboard'
+              ? 'bg-[#0ea5e9] text-slate-950 font-black shadow-md'
+              : 'text-slate-400 hover:text-white hover:bg-[#0b0e14]'
+          }`}
+        >
+          <Zap className="w-4 h-4" /> Master Engine
+        </button>
+
+        <button
+          onClick={() => setSubTab('users')}
+          className={`px-4 py-2 rounded-xl flex items-center gap-2 transition-all ${
+            subTab === 'users'
+              ? 'bg-[#0ea5e9] text-slate-950 font-black shadow-md'
+              : 'text-slate-400 hover:text-white hover:bg-[#0b0e14]'
+          }`}
+        >
+          <Users className="w-4 h-4" /> User Management
+        </button>
+
+        <button
+          onClick={() => setSubTab('subscriptions')}
+          className={`px-4 py-2 rounded-xl flex items-center gap-2 transition-all ${
+            subTab === 'subscriptions'
+              ? 'bg-[#0ea5e9] text-slate-950 font-black shadow-md'
+              : 'text-slate-400 hover:text-white hover:bg-[#0b0e14]'
+          }`}
+        >
+          <CreditCard className="w-4 h-4" /> SaaS Subscriptions
+        </button>
+
+        <button
+          onClick={() => setSubTab('services')}
+          className={`px-4 py-2 rounded-xl flex items-center gap-2 transition-all ${
+            subTab === 'services'
+              ? 'bg-[#0ea5e9] text-slate-950 font-black shadow-md'
+              : 'text-slate-400 hover:text-white hover:bg-[#0b0e14]'
+          }`}
+        >
+          <Wrench className="w-4 h-4" /> Services & Pricing
+        </button>
+
+        <button
+          onClick={() => setSubTab('audit_logs')}
+          className={`px-4 py-2 rounded-xl flex items-center gap-2 transition-all ${
+            subTab === 'audit_logs'
+              ? 'bg-[#0ea5e9] text-slate-950 font-black shadow-md'
+              : 'text-slate-400 hover:text-white hover:bg-[#0b0e14]'
+          }`}
+        >
+          <ShieldCheck className="w-4 h-4" /> Audit Logs & Security
+        </button>
+
+        <button
+          onClick={() => setSubTab('support_tickets')}
+          className={`px-4 py-2 rounded-xl flex items-center gap-2 transition-all ${
+            subTab === 'support_tickets'
+              ? 'bg-[#0ea5e9] text-slate-950 font-black shadow-md'
+              : 'text-slate-400 hover:text-white hover:bg-[#0b0e14]'
+          }`}
+        >
+          <LifeBuoy className="w-4 h-4" /> Support Center
+        </button>
+      </div>
+
+      {/* RENDER SUB-MODULE BASED ON SELECTED SUB-TAB */}
+      {subTab === 'users' ? (
+        <SuperAdminUsersModule />
+      ) : subTab === 'subscriptions' ? (
+        <SuperAdminSubscriptionsModule />
+      ) : subTab === 'services' ? (
+        <SuperAdminServicesModule />
+      ) : subTab === 'audit_logs' ? (
+        <SuperAdminAuditLogsModule />
+      ) : subTab === 'support_tickets' ? (
+        <SuperAdminSupportTicketsModule />
+      ) : (
+        /* DEFAULT MASTER ENGINE DASHBOARD VIEW */
+        <div className="space-y-6">
+          {/* DYNAMIC SYSTEM HEALTH & COMMISSION BAR */}
+          <div className="p-4 rounded-3xl bg-[#121824] border border-[#1e293b] flex flex-col md:flex-row items-center justify-between gap-4 shadow-xl">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-sky-500/20 text-sky-400 flex items-center justify-center border border-sky-500/30 font-black">
+                <Zap className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-black text-sm text-white">Super Admin Master Engine</h3>
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-bold border border-emerald-500/30">
+                    LIVE MONGODB ATLAS DYNAMIC METRICS
+                  </span>
+                </div>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Platform Commission: <span className="font-bold text-sky-400">{commissionRate}%</span> &bull; Calculated Monthly Commission: <span className="font-bold text-emerald-400">£{platformCommissionEarnings.toFixed(2)}</span>
+                </p>
+              </div>
+            </div>
+
+            {/* Commission Rate Adjuster Slider */}
+            <div className="flex items-center gap-3 bg-[#0b0e14] p-2 px-4 rounded-2xl border border-[#1e293b] w-full md:w-auto">
+              <span className="text-[11px] font-bold text-slate-400 uppercase whitespace-nowrap">Commission Slider:</span>
+              <input
+                type="range"
+                min="5"
+                max="30"
+                step="0.5"
+                value={commissionRate}
+                onChange={(e) => {
+                  setCommissionRate(parseFloat(e.target.value));
+                  showToast(`Platform Commission adjusted to ${e.target.value}%! Revenue recalculated.`);
+                }}
+                className="w-28 accent-sky-400 cursor-pointer"
+              />
+              <span className="font-mono font-black text-sky-400 text-xs">{commissionRate}%</span>
+            </div>
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="font-black text-sm text-white">Super Admin Master Engine</h3>
-              <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-bold border border-emerald-500/30">
-                LIVE MONGODB ATLAS DYNAMIC METRICS
+
+          {/* TOP SYSTEM GATEWAY STATUS CARDS */}
+          <div className="grid md:grid-cols-3 gap-4">
+            {/* API Gateway Card */}
+            <div
+              onClick={() => setShowSystemHealthModal(true)}
+              className="p-4 rounded-2xl bg-[#121824] border border-sky-500/40 shadow-xl flex items-center justify-between hover:scale-102 cursor-pointer transition-all"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-3 rounded-xl bg-sky-500/20 text-sky-400 border border-sky-500/30">
+                  <Cpu className="w-5 h-5" />
+                </div>
+                <div>
+                  <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider block">API GATEWAY</span>
+                  <h3 className="text-sm font-black text-white mt-0.5">Operational (99.98%)</h3>
+                </div>
+              </div>
+              <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" /> Active
               </span>
             </div>
-            <p className="text-xs text-slate-400 mt-0.5">
-              Platform Commission: <span className="font-bold text-sky-400">{commissionRate}%</span> &bull; Calculated Monthly Commission: <span className="font-bold text-emerald-400">£{platformCommissionEarnings.toFixed(2)}</span>
-            </p>
-          </div>
-        </div>
 
-        {/* Commission Rate Adjuster Slider */}
-        <div className="flex items-center gap-3 bg-[#0b0e14] p-2 px-4 rounded-2xl border border-[#1e293b] w-full md:w-auto">
-          <span className="text-[11px] font-bold text-slate-400 uppercase whitespace-nowrap">Commission Slider:</span>
-          <input
-            type="range"
-            min="5"
-            max="30"
-            step="0.5"
-            value={commissionRate}
-            onChange={(e) => {
-              setCommissionRate(parseFloat(e.target.value));
-              showToast(`Platform Commission adjusted to ${e.target.value}%! Revenue recalculated.`);
-            }}
-            className="w-28 accent-sky-400 cursor-pointer"
-          />
-          <span className="font-mono font-black text-sky-400 text-xs">{commissionRate}%</span>
-        </div>
-      </div>
-
-      {/* TOP SYSTEM GATEWAY STATUS CARDS */}
-      <div className="grid md:grid-cols-3 gap-4">
-        {/* API Gateway Card */}
-        <div
-          onClick={() => setShowSystemHealthModal(true)}
-          className="p-4 rounded-2xl bg-[#121824] border border-sky-500/40 shadow-xl flex items-center justify-between hover:scale-102 cursor-pointer transition-all"
-        >
-          <div className="flex items-center gap-3">
-            <div className="p-3 rounded-xl bg-sky-500/20 text-sky-400 border border-sky-500/30">
-              <Cpu className="w-5 h-5" />
+            {/* Sync Delays Card */}
+            <div className="p-4 rounded-2xl bg-[#121824] border border-amber-500/40 shadow-xl flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-3 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                  <RefreshCw className="w-5 h-5 animate-spin" />
+                </div>
+                <div>
+                  <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider block">SYNC QUEUE</span>
+                  <h3 className="text-sm font-black text-white mt-0.5">{merchants.length * 10.5} Queued Jobs</h3>
+                </div>
+              </div>
+              <span className="px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[10px] font-bold flex items-center gap-1">
+                <AlertTriangle className="w-3 h-3" /> Syncing
+              </span>
             </div>
-            <div>
-              <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider block">API GATEWAY</span>
-              <h3 className="text-sm font-black text-white mt-0.5">Operational (99.98%)</h3>
+
+            {/* Database Load Card */}
+            <div className="p-4 rounded-2xl bg-[#121824] border border-[#1e293b] shadow-xl flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-3 rounded-xl bg-slate-800 text-slate-300 border border-slate-700">
+                  <Database className="w-5 h-5" />
+                </div>
+                <div>
+                  <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider block">MONGODB CLUSTER0</span>
+                  <h3 className="text-sm font-black text-white mt-0.5">Peak Usage: 14%</h3>
+                </div>
+              </div>
+              <span className="px-2.5 py-1 rounded-full bg-slate-800 text-slate-300 border border-slate-700 text-[10px] font-bold">
+                24ms Latency
+              </span>
             </div>
           </div>
-          <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" /> Active
-          </span>
-        </div>
 
-        {/* Sync Delays Card */}
-        <div className="p-4 rounded-2xl bg-[#121824] border border-amber-500/40 shadow-xl flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-3 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30">
-              <RefreshCw className="w-5 h-5 animate-spin" />
+          {/* DYNAMIC KPI SUMMARY CARDS GRID */}
+          <div className="grid md:grid-cols-3 gap-4">
+            <div className="p-6 rounded-2xl bg-[#121824] border border-[#1e293b] space-y-3 shadow-xl hover:border-sky-500/40 transition-all">
+              <div className="flex items-center justify-between text-slate-400">
+                <span className="text-xs font-black uppercase tracking-wider">REGISTERED SaaS MERCHANTS</span>
+                <Building2 className="w-4 h-4 text-sky-400" />
+              </div>
+              <div className="text-4xl font-black text-white tracking-tight">{totalBaseCount.toLocaleString()}</div>
+              <div className="text-xs font-bold text-sky-400 flex items-center justify-between">
+                <span>{activeCount} Active &bull; {suspendedCount} Suspended</span>
+                <span className="text-emerald-400">+12% vs last month</span>
+              </div>
             </div>
-            <div>
-              <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider block">SYNC QUEUE</span>
-              <h3 className="text-sm font-black text-white mt-0.5">{merchants.length * 10.5} Queued Jobs</h3>
+
+            <div className="p-6 rounded-2xl bg-[#121824] border border-[#1e293b] space-y-3 shadow-xl hover:border-emerald-500/40 transition-all">
+              <div className="flex items-center justify-between text-slate-400">
+                <span className="text-xs font-black uppercase tracking-wider">CALCULATED ANNUAL REVENUE</span>
+                <DollarSign className="w-4 h-4 text-emerald-400" />
+              </div>
+              <div className="text-4xl font-black text-white tracking-tight">£{annualCalculatedRevenue.toFixed(1)}M</div>
+              <div className="text-xs font-bold text-emerald-400 flex items-center gap-1">
+                <TrendingUp className="w-3.5 h-3.5" /> +8.4% YoY growth
+              </div>
             </div>
-          </div>
-          <span className="px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[10px] font-bold flex items-center gap-1">
-            <AlertTriangle className="w-3 h-3" /> Syncing
-          </span>
-        </div>
 
-        {/* Database Load Card */}
-        <div className="p-4 rounded-2xl bg-[#121824] border border-[#1e293b] shadow-xl flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-3 rounded-xl bg-slate-800 text-slate-300 border border-slate-700">
-              <Database className="w-5 h-5" />
-            </div>
-            <div>
-              <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider block">MONGODB CLUSTER0</span>
-              <h3 className="text-sm font-black text-white mt-0.5">Peak Usage: 14%</h3>
-            </div>
-          </div>
-          <span className="px-2.5 py-1 rounded-full bg-slate-800 text-slate-300 border border-slate-700 text-[10px] font-bold">
-            24ms Latency
-          </span>
-        </div>
-      </div>
+            <div className="p-6 rounded-2xl bg-[#121824] border border-[#1e293b] space-y-3 shadow-xl flex flex-col justify-between hover:border-purple-500/40 transition-all">
+              <div>
+                <span className="text-xs font-black uppercase tracking-wider text-slate-400 block">SUBSCRIPTION GROWTH</span>
+                <div className="text-3xl font-black text-white mt-1 tracking-tight">94.2% Retention</div>
+              </div>
 
-      {/* DYNAMIC KPI SUMMARY CARDS GRID */}
-      <div className="grid md:grid-cols-3 gap-4">
-        {/* Total Businesses Card (Dynamic Calculation) */}
-        <div className="p-6 rounded-2xl bg-[#121824] border border-[#1e293b] space-y-3 shadow-xl hover:border-sky-500/40 transition-all">
-          <div className="flex items-center justify-between text-slate-400">
-            <span className="text-xs font-black uppercase tracking-wider">REGISTERED SaaS MERCHANTS</span>
-            <Building2 className="w-4 h-4 text-sky-400" />
-          </div>
-          <div className="text-4xl font-black text-white tracking-tight">{totalBaseCount.toLocaleString()}</div>
-          <div className="text-xs font-bold text-sky-400 flex items-center justify-between">
-            <span>{activeCount} Active &bull; {suspendedCount} Suspended</span>
-            <span className="text-emerald-400">+12% vs last month</span>
-          </div>
-        </div>
-
-        {/* Annual Revenue Card (Dynamic Calculation) */}
-        <div className="p-6 rounded-2xl bg-[#121824] border border-[#1e293b] space-y-3 shadow-xl hover:border-emerald-500/40 transition-all">
-          <div className="flex items-center justify-between text-slate-400">
-            <span className="text-xs font-black uppercase tracking-wider">CALCULATED ANNUAL REVENUE</span>
-            <DollarSign className="w-4 h-4 text-emerald-400" />
-          </div>
-          <div className="text-4xl font-black text-white tracking-tight">£{annualCalculatedRevenue.toFixed(1)}M</div>
-          <div className="text-xs font-bold text-emerald-400 flex items-center gap-1">
-            <TrendingUp className="w-3.5 h-3.5" /> +8.4% YoY growth
-          </div>
-        </div>
-
-        {/* Subscription Retention Card */}
-        <div className="p-6 rounded-2xl bg-[#121824] border border-[#1e293b] space-y-3 shadow-xl flex flex-col justify-between hover:border-purple-500/40 transition-all">
-          <div>
-            <span className="text-xs font-black uppercase tracking-wider text-slate-400 block">SUBSCRIPTION GROWTH</span>
-            <div className="text-3xl font-black text-white mt-1 tracking-tight">94.2% Retention</div>
-          </div>
-
-          <div className="flex items-end gap-1.5 h-10 pt-2">
-            {[30, 45, 35, 50, 60, 75, 100, 65, 80].map((h, i) => (
-              <div
-                key={i}
-                style={{ height: `${h}%` }}
-                className={`flex-1 rounded-sm transition-all ${
-                  i === 6 ? 'bg-sky-400 shadow-[0_0_12px_#38bdf8]' : 'bg-slate-800'
-                }`}
-              />
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* BUSINESS MANAGEMENT TABLE */}
-      <div className="p-6 rounded-3xl bg-[#121824] border border-[#1e293b] space-y-6 shadow-2xl">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h2 className="text-xl font-black text-white tracking-tight">Business Management</h2>
-            <p className="text-xs text-slate-400 mt-0.5">
-              Review and manage {merchants.length} active merchant accounts in real-time.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setShowAddMerchantModal(true)}
-              className="px-4 py-2 bg-[#0ea5e9] hover:bg-[#0284c7] text-slate-950 font-black rounded-xl text-xs flex items-center gap-1.5 shadow-lg shadow-sky-500/20 transition-all hover:scale-105"
-            >
-              <Plus className="w-4 h-4 stroke-[3]" /> Add Merchant
-            </button>
-
-            <div className="flex bg-[#0b0e14] p-1 rounded-xl text-xs font-bold border border-[#1e293b]">
-              <button
-                onClick={() => setFilterTier('all')}
-                className={`px-3 py-1.5 rounded-lg transition-all ${
-                  filterTier === 'all' ? 'bg-[#0ea5e9] text-slate-950 font-black shadow-md' : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                All
-              </button>
-              <button
-                onClick={() => setFilterTier('enterprise')}
-                className={`px-3 py-1.5 rounded-lg transition-all ${
-                  filterTier === 'enterprise' ? 'bg-[#0ea5e9] text-slate-950 font-black shadow-md' : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                Enterprise
-              </button>
-              <button
-                onClick={() => setFilterTier('pro')}
-                className={`px-3 py-1.5 rounded-lg transition-all ${
-                  filterTier === 'pro' ? 'bg-[#0ea5e9] text-slate-950 font-black shadow-md' : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                Pro
-              </button>
+              <div className="flex items-end gap-1.5 h-10 pt-2">
+                {[30, 45, 35, 50, 60, 75, 100, 65, 80].map((h, i) => (
+                  <div
+                    key={i}
+                    style={{ height: `${h}%` }}
+                    className={`flex-1 rounded-sm transition-all ${
+                      i === 6 ? 'bg-sky-400 shadow-[0_0_12px_#38bdf8]' : 'bg-slate-800'
+                    }`}
+                  />
+                ))}
+              </div>
             </div>
           </div>
+
+          {/* BUSINESS MANAGEMENT TABLE */}
+          <div className="p-6 rounded-3xl bg-[#121824] border border-[#1e293b] space-y-6 shadow-2xl">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-black text-white tracking-tight">Business Management</h2>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Review and manage {merchants.length} active merchant accounts in real-time.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setShowAddMerchantModal(true)}
+                  className="px-4 py-2 bg-[#0ea5e9] hover:bg-[#0284c7] text-slate-950 font-black rounded-xl text-xs flex items-center gap-1.5 shadow-lg shadow-sky-500/20 transition-all hover:scale-105"
+                >
+                  <Plus className="w-4 h-4 stroke-[3]" /> Add Merchant
+                </button>
+
+                <div className="flex bg-[#0b0e14] p-1 rounded-xl text-xs font-bold border border-[#1e293b]">
+                  <button
+                    onClick={() => setFilterTier('all')}
+                    className={`px-3 py-1.5 rounded-lg transition-all ${
+                      filterTier === 'all' ? 'bg-[#0ea5e9] text-slate-950 font-black shadow-md' : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    All
+                  </button>
+                  <button
+                    onClick={() => setFilterTier('enterprise')}
+                    className={`px-3 py-1.5 rounded-lg transition-all ${
+                      filterTier === 'enterprise' ? 'bg-[#0ea5e9] text-slate-950 font-black shadow-md' : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    Enterprise
+                  </button>
+                  <button
+                    onClick={() => setFilterTier('pro')}
+                    className={`px-3 py-1.5 rounded-lg transition-all ${
+                      filterTier === 'pro' ? 'bg-[#0ea5e9] text-slate-950 font-black shadow-md' : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    Pro
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Merchants Data Table */}
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="font-bold uppercase tracking-wider text-slate-400 border-b border-[#1e293b]">
+                  <tr>
+                    <th className="py-3 px-4">Business Name</th>
+                    <th className="py-3 px-4">Tier</th>
+                    <th className="py-3 px-4">Status (Click to Toggle)</th>
+                    <th className="py-3 px-4">Revenue (MTD)</th>
+                    <th className="py-3 px-4">Merchant ID</th>
+                    <th className="py-3 px-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#1e293b] font-medium text-slate-300">
+                  {filteredMerchants.map((m) => (
+                    <tr key={m.id} className="hover:bg-[#0b0e14]/50 transition-colors">
+                      <td className="py-4 px-4 font-bold">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-9 h-9 rounded-xl ${m.color} text-white font-black flex items-center justify-center text-xs shrink-0 shadow-md`}>
+                            {m.initials}
+                          </div>
+                          <div>
+                            <div className="font-black text-sm text-white">{m.name}</div>
+                            <div className="text-[11px] text-slate-400">{m.city}</div>
+                          </div>
+                        </div>
+                      </td>
+
+                      <td className="py-4 px-4">
+                        <span className={`px-2.5 py-1 rounded text-[10px] font-black uppercase tracking-wider border ${
+                          m.tier === 'ENTERPRISE'
+                            ? 'bg-sky-500/10 text-sky-400 border-sky-500/30'
+                            : 'bg-slate-800 text-slate-300 border-slate-700'
+                        }`}>
+                          {m.tier}
+                        </span>
+                      </td>
+
+                      <td className="py-4 px-4">
+                        <button
+                          onClick={() => handleToggleMerchantStatus(m.id)}
+                          className={`font-bold flex items-center gap-1.5 px-3 py-1 rounded-xl border transition-all ${
+                            m.status === 'Active'
+                              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20'
+                              : 'bg-rose-500/10 text-rose-400 border-rose-500/30 hover:bg-rose-500/20'
+                          }`}
+                          title="Click to Toggle Status (Active / Suspended)"
+                        >
+                          <span className={`w-2 h-2 rounded-full ${m.status === 'Active' ? 'bg-emerald-400' : 'bg-rose-400'}`} />
+                          {m.status}
+                        </button>
+                      </td>
+
+                      <td className="py-4 px-4 font-black text-white text-sm">£{(m.revenue || 0).toFixed(2)}</td>
+                      <td className="py-4 px-4 font-mono text-slate-400">{m.merchantId}</td>
+
+                      <td className="py-4 px-4 text-right">
+                        <button
+                          onClick={() => showToast(`Merchant ${m.name} edited!`)}
+                          className="px-3 py-1.5 rounded-lg bg-[#0b0e14] border border-[#1e293b] text-sky-400 hover:text-white font-bold text-xs"
+                        >
+                          Edit
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
-
-        {/* Merchants Data Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="font-bold uppercase tracking-wider text-slate-400 border-b border-[#1e293b]">
-              <tr>
-                <th className="py-3 px-4">Business Name</th>
-                <th className="py-3 px-4">Tier</th>
-                <th className="py-3 px-4">Status (Click to Toggle)</th>
-                <th className="py-3 px-4">Revenue (MTD)</th>
-                <th className="py-3 px-4">Merchant ID</th>
-                <th className="py-3 px-4 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#1e293b] font-medium text-slate-300">
-              {filteredMerchants.map((m) => (
-                <tr key={m.id} className="hover:bg-[#0b0e14]/50 transition-colors">
-                  <td className="py-4 px-4 font-bold">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-9 h-9 rounded-xl ${m.color} text-white font-black flex items-center justify-center text-xs shrink-0 shadow-md`}>
-                        {m.initials}
-                      </div>
-                      <div>
-                        <div className="font-black text-sm text-white">{m.name}</div>
-                        <div className="text-[11px] text-slate-400">{m.city}</div>
-                      </div>
-                    </div>
-                  </td>
-
-                  <td className="py-4 px-4">
-                    <span className={`px-2.5 py-1 rounded text-[10px] font-black uppercase tracking-wider border ${
-                      m.tier === 'ENTERPRISE'
-                        ? 'bg-sky-500/10 text-sky-400 border-sky-500/30'
-                        : 'bg-slate-800 text-slate-300 border-slate-700'
-                    }`}>
-                      {m.tier}
-                    </span>
-                  </td>
-
-                  {/* CLICKABLE STATUS TOGGLE */}
-                  <td className="py-4 px-4">
-                    <button
-                      onClick={() => handleToggleMerchantStatus(m.id)}
-                      className={`font-bold flex items-center gap-1.5 px-3 py-1 rounded-xl border transition-all ${
-                        m.status === 'Active'
-                          ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20'
-                          : 'bg-rose-500/10 text-rose-400 border-rose-500/30 hover:bg-rose-500/20'
-                      }`}
-                      title="Click to Toggle Status (Active / Suspended)"
-                    >
-                      <span className={`w-2 h-2 rounded-full ${m.status === 'Active' ? 'bg-emerald-400' : 'bg-rose-400'}`} />
-                      {m.status}
-                    </button>
-                  </td>
-
-                  <td className="py-4 px-4 font-black text-white text-sm">£{(m.revenue || 0).toFixed(2)}</td>
-                  <td className="py-4 px-4 font-mono text-slate-400">{m.merchantId}</td>
-
-                  <td className="py-4 px-4 text-right">
-                    <button
-                      onClick={() => showToast(`Merchant ${m.name} edited!`)}
-                      className="px-3 py-1.5 rounded-lg bg-[#0b0e14] border border-[#1e293b] text-sky-400 hover:text-white font-bold text-xs"
-                    >
-                      Edit
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      )}
 
       {/* WORKING MODAL 1: ADD MERCHANT MODAL */}
       {showAddMerchantModal && (
