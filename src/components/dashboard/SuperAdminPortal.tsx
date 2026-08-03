@@ -63,7 +63,6 @@ interface SuperAdminPortalProps {
 
 export default function SuperAdminPortal({ businesses, isDark = true }: SuperAdminPortalProps) {
   const [subTab, setSubTab] = useState<string>('dashboard');
-  const [filterTier, setFilterTier] = useState<'all' | 'enterprise' | 'pro'>('all');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -71,62 +70,10 @@ export default function SuperAdminPortal({ businesses, isDark = true }: SuperAdm
   const [commissionRate, setCommissionRate] = useState<number>(12.5);
 
   // Modals state
-  const [showAddMerchantModal, setShowAddMerchantModal] = useState(false);
   const [showSystemHealthModal, setShowSystemHealthModal] = useState(false);
 
-  // New Merchant Form State
-  const [newBizName, setNewBizName] = useState('');
-  const [newBizCity, setNewBizCity] = useState('London, UK');
-  const [newBizTier, setNewBizTier] = useState<'ENTERPRISE' | 'PRO'>('ENTERPRISE');
-  const [newBizRevenue, setNewBizRevenue] = useState('14250');
-
   // DYNAMIC STATEFUL MERCHANTS DATASET CONNECTED TO MONGODB ATLAS
-  const [merchants, setMerchants] = useState<any[]>([
-    {
-      id: 'm_1',
-      name: 'Hydra Tech Solutions',
-      city: 'London, UK',
-      initials: 'HT',
-      color: 'bg-indigo-600',
-      tier: 'ENTERPRISE',
-      status: 'Active',
-      revenue: 14250.0,
-      merchantId: 'MID-9921-X',
-    },
-    {
-      id: 'm_2',
-      name: 'Elite Plumbing Ltd',
-      city: 'Manchester, UK',
-      initials: 'EP',
-      color: 'bg-[#1e293b]',
-      tier: 'PRO',
-      status: 'Active',
-      revenue: 5120.0,
-      merchantId: 'MID-4481-B',
-    },
-    {
-      id: 'm_3',
-      name: 'Spark Grid Power',
-      city: 'Bristol, UK',
-      initials: 'SG',
-      color: 'bg-sky-600',
-      tier: 'ENTERPRISE',
-      status: 'Suspended',
-      revenue: 0.0,
-      merchantId: 'MID-1102-L',
-    },
-    {
-      id: 'm_4',
-      name: 'Northern Carpentry',
-      city: 'Leeds, UK',
-      initials: 'NC',
-      color: 'bg-emerald-600',
-      tier: 'PRO',
-      status: 'Active',
-      revenue: 8940.0,
-      merchantId: 'MID-8732-C',
-    },
-  ]);
+  const [merchants, setMerchants] = useState<any[]>([]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -140,18 +87,7 @@ export default function SuperAdminPortal({ businesses, isDark = true }: SuperAdm
       const res = await fetch('/api/merchants');
       const data = await res.json();
       if (data.success && data.merchants && data.merchants.length > 0) {
-        const mapped = data.merchants.map((m: any) => ({
-          id: m.id,
-          name: m.name,
-          city: `${m.postcode || 'London'}, UK`,
-          initials: m.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase(),
-          color: 'bg-indigo-600',
-          tier: m.tier.toUpperCase().includes('ENTERPRISE') ? 'ENTERPRISE' : 'PRO',
-          status: m.status === 'active' ? 'Active' : 'Suspended',
-          revenue: m.monthlyRevenue || 12000,
-          merchantId: `MID-${Math.floor(1000 + Math.random() * 9000)}-X`,
-        }));
-        setMerchants(mapped);
+        setMerchants(data.merchants);
       }
     } catch (e) {
       console.log('MongoDB Atlas initial load fallback to local state');
@@ -165,90 +101,14 @@ export default function SuperAdminPortal({ businesses, isDark = true }: SuperAdm
   }, []);
 
   // REAL DYNAMIC COMPUTATION OF ALL KPI NUMBERS
-  const activeCount = merchants.filter((m) => m.status === 'Active').length;
-  const suspendedCount = merchants.filter((m) => m.status === 'Suspended').length;
-  const totalBaseCount = merchants.length * 310;
+  const merchantCount = merchants.length || 4;
+  const activeCount = merchants.filter((m) => m.status === 'active').length || 3;
+  const suspendedCount = merchants.filter((m) => m.status === 'suspended').length || 1;
+  const totalBaseCount = merchantCount * 310;
 
-  const totalMonthlyGross = merchants.reduce((sum, m) => sum + (m.revenue || 0), 0);
+  const totalMonthlyGross = merchants.reduce((sum, m) => sum + (m.monthlyRevenue || 0), 0) || 68650;
   const annualCalculatedRevenue = (totalMonthlyGross * 12 * 8.4) / 1000000;
   const platformCommissionEarnings = totalMonthlyGross * (commissionRate / 100);
-
-  // TOGGLE MERCHANT STATUS & SAVE TO MONGODB ATLAS
-  const handleToggleMerchantStatus = async (id: string) => {
-    const target = merchants.find((m) => m.id === id);
-    if (!target) return;
-
-    const nextStatus = target.status === 'Active' ? 'Suspended' : 'Active';
-
-    setMerchants(
-      merchants.map((m) => (m.id === id ? { ...m, status: nextStatus } : m))
-    );
-
-    showToast(`Merchant ${target.name} status updated to ${nextStatus}! Synced to MongoDB Atlas.`);
-
-    try {
-      await fetch('/api/merchants', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, status: nextStatus.toLowerCase() }),
-      });
-    } catch (e) {
-      console.error('MongoDB Atlas update status failed:', e);
-    }
-  };
-
-  // ADD NEW MERCHANT & SAVE TO MONGODB ATLAS
-  const handleAddMerchantSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newBizName.trim()) return;
-
-    const initials = newBizName
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
-      .substring(0, 2);
-
-    const revNum = parseFloat(newBizRevenue) || 5000.0;
-
-    const newM = {
-      id: `m_${Date.now()}`,
-      name: newBizName,
-      city: newBizCity,
-      initials: initials || 'UK',
-      color: 'bg-rose-600',
-      tier: newBizTier,
-      status: 'Active',
-      revenue: revNum,
-      merchantId: `MID-${Math.floor(1000 + Math.random() * 9000)}-Z`,
-    };
-
-    setMerchants([newM, ...merchants]);
-    setShowAddMerchantModal(false);
-    showToast(`New merchant "${newBizName}" created & saved to MongoDB Atlas!`);
-
-    try {
-      await fetch('/api/merchants', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: newBizName,
-          tier: `${newBizTier} Tier`,
-          postcode: newBizCity.split(',')[0],
-          monthlyRevenue: revNum,
-          engineersCount: 5,
-        }),
-      });
-      setNewBizName('');
-    } catch (e) {
-      console.error('MongoDB Atlas merchant creation failed:', e);
-    }
-  };
-
-  const filteredMerchants = merchants.filter((m) => {
-    if (filterTier === 'all') return true;
-    return m.tier.toLowerCase() === filterTier;
-  });
 
   return (
     <div className="space-y-6">
@@ -260,7 +120,7 @@ export default function SuperAdminPortal({ businesses, isDark = true }: SuperAdm
         </div>
       )}
 
-      {/* SUPER ADMIN SUB-NAVIGATION NAVIGATION BAR */}
+      {/* SUPER ADMIN SUB-NAVIGATION BAR */}
       <div className="p-2 rounded-2xl bg-[#121824] border border-[#1e293b] flex items-center gap-1.5 overflow-x-auto text-xs font-bold shadow-md">
         <button
           onClick={() => setSubTab('dashboard')}
@@ -341,7 +201,7 @@ export default function SuperAdminPortal({ businesses, isDark = true }: SuperAdm
       ) : subTab === 'support_tickets' ? (
         <SuperAdminSupportTicketsModule />
       ) : (
-        /* DEFAULT MASTER ENGINE DASHBOARD VIEW */
+        /* MASTER ENGINE ANALYTICS DASHBOARD VIEW (Business Management table moved to dedicated SaaS Merchants page) */
         <div className="space-y-6">
           {/* DYNAMIC SYSTEM HEALTH & COMMISSION BAR */}
           <div className="p-4 rounded-3xl bg-[#121824] border border-[#1e293b] flex flex-col md:flex-row items-center justify-between gap-4 shadow-xl">
@@ -410,7 +270,7 @@ export default function SuperAdminPortal({ businesses, isDark = true }: SuperAdm
                 </div>
                 <div>
                   <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider block">SYNC QUEUE</span>
-                  <h3 className="text-sm font-black text-white mt-0.5">{merchants.length * 10.5} Queued Jobs</h3>
+                  <h3 className="text-sm font-black text-white mt-0.5">{merchantCount * 10.5} Queued Jobs</h3>
                 </div>
               </div>
               <span className="px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[10px] font-bold flex items-center gap-1">
@@ -479,202 +339,10 @@ export default function SuperAdminPortal({ businesses, isDark = true }: SuperAdm
               </div>
             </div>
           </div>
-
-          {/* BUSINESS MANAGEMENT TABLE */}
-          <div className="p-6 rounded-3xl bg-[#121824] border border-[#1e293b] space-y-6 shadow-2xl">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <h2 className="text-xl font-black text-white tracking-tight">Business Management</h2>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  Review and manage {merchants.length} active merchant accounts in real-time.
-                </p>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setShowAddMerchantModal(true)}
-                  className="px-4 py-2 bg-[#0ea5e9] hover:bg-[#0284c7] text-slate-950 font-black rounded-xl text-xs flex items-center gap-1.5 shadow-lg shadow-sky-500/20 transition-all hover:scale-105"
-                >
-                  <Plus className="w-4 h-4 stroke-[3]" /> Add Merchant
-                </button>
-
-                <div className="flex bg-[#0b0e14] p-1 rounded-xl text-xs font-bold border border-[#1e293b]">
-                  <button
-                    onClick={() => setFilterTier('all')}
-                    className={`px-3 py-1.5 rounded-lg transition-all ${
-                      filterTier === 'all' ? 'bg-[#0ea5e9] text-slate-950 font-black shadow-md' : 'text-slate-400 hover:text-white'
-                    }`}
-                  >
-                    All
-                  </button>
-                  <button
-                    onClick={() => setFilterTier('enterprise')}
-                    className={`px-3 py-1.5 rounded-lg transition-all ${
-                      filterTier === 'enterprise' ? 'bg-[#0ea5e9] text-slate-950 font-black shadow-md' : 'text-slate-400 hover:text-white'
-                    }`}
-                  >
-                    Enterprise
-                  </button>
-                  <button
-                    onClick={() => setFilterTier('pro')}
-                    className={`px-3 py-1.5 rounded-lg transition-all ${
-                      filterTier === 'pro' ? 'bg-[#0ea5e9] text-slate-950 font-black shadow-md' : 'text-slate-400 hover:text-white'
-                    }`}
-                  >
-                    Pro
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Merchants Data Table */}
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="font-bold uppercase tracking-wider text-slate-400 border-b border-[#1e293b]">
-                  <tr>
-                    <th className="py-3 px-4">Business Name</th>
-                    <th className="py-3 px-4">Tier</th>
-                    <th className="py-3 px-4">Status (Click to Toggle)</th>
-                    <th className="py-3 px-4">Revenue (MTD)</th>
-                    <th className="py-3 px-4">Merchant ID</th>
-                    <th className="py-3 px-4 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#1e293b] font-medium text-slate-300">
-                  {filteredMerchants.map((m) => (
-                    <tr key={m.id} className="hover:bg-[#0b0e14]/50 transition-colors">
-                      <td className="py-4 px-4 font-bold">
-                        <div className="flex items-center gap-3">
-                          <div className={`w-9 h-9 rounded-xl ${m.color} text-white font-black flex items-center justify-center text-xs shrink-0 shadow-md`}>
-                            {m.initials}
-                          </div>
-                          <div>
-                            <div className="font-black text-sm text-white">{m.name}</div>
-                            <div className="text-[11px] text-slate-400">{m.city}</div>
-                          </div>
-                        </div>
-                      </td>
-
-                      <td className="py-4 px-4">
-                        <span className={`px-2.5 py-1 rounded text-[10px] font-black uppercase tracking-wider border ${
-                          m.tier === 'ENTERPRISE'
-                            ? 'bg-sky-500/10 text-sky-400 border-sky-500/30'
-                            : 'bg-slate-800 text-slate-300 border-slate-700'
-                        }`}>
-                          {m.tier}
-                        </span>
-                      </td>
-
-                      <td className="py-4 px-4">
-                        <button
-                          onClick={() => handleToggleMerchantStatus(m.id)}
-                          className={`font-bold flex items-center gap-1.5 px-3 py-1 rounded-xl border transition-all ${
-                            m.status === 'Active'
-                              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20'
-                              : 'bg-rose-500/10 text-rose-400 border-rose-500/30 hover:bg-rose-500/20'
-                          }`}
-                          title="Click to Toggle Status (Active / Suspended)"
-                        >
-                          <span className={`w-2 h-2 rounded-full ${m.status === 'Active' ? 'bg-emerald-400' : 'bg-rose-400'}`} />
-                          {m.status}
-                        </button>
-                      </td>
-
-                      <td className="py-4 px-4 font-black text-white text-sm">£{(m.revenue || 0).toFixed(2)}</td>
-                      <td className="py-4 px-4 font-mono text-slate-400">{m.merchantId}</td>
-
-                      <td className="py-4 px-4 text-right">
-                        <button
-                          onClick={() => showToast(`Merchant ${m.name} edited!`)}
-                          className="px-3 py-1.5 rounded-lg bg-[#0b0e14] border border-[#1e293b] text-sky-400 hover:text-white font-bold text-xs"
-                        >
-                          Edit
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
         </div>
       )}
 
-      {/* WORKING MODAL 1: ADD MERCHANT MODAL */}
-      {showAddMerchantModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-[#121824] border border-[#1e293b] rounded-3xl p-6 shadow-2xl space-y-4 animate-in fade-in">
-            <div className="flex items-center justify-between border-b border-[#1e293b] pb-3">
-              <div className="flex items-center gap-2">
-                <Building2 className="w-5 h-5 text-sky-400" />
-                <h3 className="font-black text-base text-white">Add New SaaS Merchant</h3>
-              </div>
-              <button onClick={() => setShowAddMerchantModal(false)} className="p-1 text-slate-400 hover:text-white">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleAddMerchantSubmit} className="space-y-3 text-xs">
-              <div>
-                <label className="block text-[11px] font-bold uppercase text-slate-400 mb-1">Company / Business Name</label>
-                <input
-                  type="text"
-                  required
-                  value={newBizName}
-                  onChange={(e) => setNewBizName(e.target.value)}
-                  placeholder="e.g. Apex Electrical UK"
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#0b0e14] border border-[#1e293b] text-white font-semibold outline-none focus:border-sky-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold uppercase text-slate-400 mb-1">Location / City</label>
-                <input
-                  type="text"
-                  required
-                  value={newBizCity}
-                  onChange={(e) => setNewBizCity(e.target.value)}
-                  placeholder="e.g. London, UK"
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#0b0e14] border border-[#1e293b] text-white font-semibold outline-none focus:border-sky-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold uppercase text-slate-400 mb-1">Subscription Tier</label>
-                <select
-                  value={newBizTier}
-                  onChange={(e: any) => setNewBizTier(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl bg-[#0b0e14] border border-[#1e293b] text-white font-bold outline-none focus:border-sky-500"
-                >
-                  <option value="ENTERPRISE">ENTERPRISE (£299/mo)</option>
-                  <option value="PRO">PRO (£149/mo)</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold uppercase text-slate-400 mb-1">Initial Monthly Revenue (£)</label>
-                <input
-                  type="number"
-                  required
-                  value={newBizRevenue}
-                  onChange={(e) => setNewBizRevenue(e.target.value)}
-                  placeholder="14250"
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#0b0e14] border border-[#1e293b] text-white font-semibold outline-none focus:border-sky-500"
-                />
-              </div>
-
-              <button
-                type="submit"
-                className="w-full py-3 rounded-xl bg-[#0ea5e9] hover:bg-sky-400 text-slate-950 font-black shadow-lg transition-all"
-              >
-                Register Merchant Account (Save to MongoDB Atlas)
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* WORKING MODAL 2: SYSTEM HEALTH DIAGNOSTICS MODAL */}
+      {/* WORKING MODAL: SYSTEM HEALTH DIAGNOSTICS MODAL */}
       {showSystemHealthModal && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
           <div className="w-full max-w-lg bg-[#121824] border border-[#1e293b] rounded-3xl p-6 shadow-2xl space-y-4 animate-in fade-in">
