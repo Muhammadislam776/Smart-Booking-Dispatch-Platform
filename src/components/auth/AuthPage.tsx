@@ -239,10 +239,10 @@ export default function AuthPage({ onLoginSuccess, onExploreDemo, isDark = true 
         </div>
       </header>
 
-      {/* MAIN LANDING BODY SECTIONS */}
-      <main className="relative z-10 max-w-6xl mx-auto w-full px-4 pt-28 pb-12 space-y-32 flex-1">
+      {/* MAIN LANDING BODY SECTIONS WITH GENEROUS SPACIOUS MARGINS */}
+      <main className="relative z-10 max-w-6xl mx-auto w-full px-4 pt-36 pb-24 space-y-48 sm:space-y-60 flex-1">
         {/* 1. HERO SECTION (#home) */}
-        <section id="home" className="text-center space-y-6 max-w-4xl mx-auto pt-6 animate-slide-up">
+        <section id="home" className="text-center space-y-8 max-w-4xl mx-auto pt-4 animate-slide-up scroll-mt-36">
           <div className="inline-flex items-center gap-2 bg-[#0b0e14] border border-sky-500/30 text-sky-400 text-xs font-black px-4 py-1.5 rounded-full shadow-xl">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
             <span>WEIC SMART TRADE SOLUTIONS UK — Official SaaS Platform</span>
@@ -283,7 +283,7 @@ export default function AuthPage({ onLoginSuccess, onExploreDemo, isDark = true 
           </div>
 
           {/* ONE-CLICK ROLE PRESET CARDS */}
-          <div className="pt-8">
+          <div className="pt-10">
             <div className="rounded-3xl bg-[#121824]/90 border border-[#1e293b] p-6 shadow-2xl space-y-4 max-w-4xl mx-auto backdrop-blur-xl hover:border-sky-500/40 transition-all">
               <div className="flex items-center justify-between border-b border-[#1e293b] pb-3">
                 <span className="text-xs font-black uppercase text-sky-400 tracking-wider flex items-center gap-2">
@@ -378,8 +378,8 @@ export default function AuthPage({ onLoginSuccess, onExploreDemo, isDark = true 
         </section>
 
         {/* 2. HOW IT WORKS SECTION (#how-it-works) */}
-        <section id="how-it-works" className="space-y-8 scroll-mt-24 animate-slide-up">
-          <div className="text-center space-y-2">
+        <section id="how-it-works" className="space-y-12 scroll-mt-36 pt-20 sm:pt-28 border-t border-[#1e293b]/60 animate-slide-up">
+          <div className="text-center space-y-3">
             <span className="text-xs font-black uppercase text-sky-400 tracking-wider">AUTOMATED WORKFLOW</span>
             <h2 className="text-3xl sm:text-5xl font-black text-white">How TradePro 360 Works</h2>
             <p className="text-xs sm:text-sm text-slate-400 max-w-xl mx-auto">
@@ -412,8 +412,8 @@ export default function AuthPage({ onLoginSuccess, onExploreDemo, isDark = true 
         </section>
 
         {/* 3. IDEAS SECTION (#ideas - MATCHING REFERENCE SCREENSHOT) */}
-        <section id="ideas" className="space-y-8 scroll-mt-24 animate-slide-up">
-          <div className="text-center space-y-2">
+        <section id="ideas" className="space-y-12 scroll-mt-36 pt-20 sm:pt-28 border-t border-[#1e293b]/60 animate-slide-up">
+          <div className="text-center space-y-3">
             <span className="text-xs font-black uppercase text-amber-400 tracking-wider">CUTTING-EDGE MODULES</span>
             <h2 className="text-3xl sm:text-5xl font-black text-white">Institutional Features & Ideas</h2>
             <p className="text-xs sm:text-sm text-slate-400 max-w-xl mx-auto">
@@ -497,8 +497,8 @@ export default function AuthPage({ onLoginSuccess, onExploreDemo, isDark = true 
         </section>
 
         {/* 4. PLATFORM FEATURES SECTION (#features - MATCHING REFERENCE SCREENSHOT) */}
-        <section id="features" className="space-y-8 scroll-mt-24 animate-slide-up">
-          <div className="text-center space-y-2">
+        <section id="features" className="space-y-12 scroll-mt-36 pt-20 sm:pt-28 border-t border-[#1e293b]/60 animate-slide-up">
+          <div className="text-center space-y-3">
             <span className="text-xs font-black uppercase text-sky-400 tracking-wider">ENTERPRISE SUITE</span>
             <h2 className="text-3xl sm:text-5xl font-black text-white">Platform Features</h2>
             <p className="text-xs sm:text-sm text-slate-400 max-w-xl mx-auto">
@@ -530,8 +530,8 @@ export default function AuthPage({ onLoginSuccess, onExploreDemo, isDark = true 
         </section>
 
         {/* 5. RESOURCES SECTION (#resources) */}
-        <section id="resources" className="space-y-8 scroll-mt-24 animate-slide-up">
-          <div className="text-center space-y-2">
+        <section id="resources" className="space-y-12 scroll-mt-36 pt-20 sm:pt-28 border-t border-[#1e293b]/60 animate-slide-up">
+          <div className="text-center space-y-3">
             <span className="text-xs font-black uppercase text-emerald-400 tracking-wider">CERTIFICATIONS & STANDARDS</span>
             <h2 className="text-3xl sm:text-5xl font-black text-white">UK Trade Standards & Compliance</h2>
             <p className="text-xs sm:text-sm text-slate-400 max-w-xl mx-auto">
@@ -573,8 +573,8 @@ export default function AuthPage({ onLoginSuccess, onExploreDemo, isDark = true 
         </section>
 
         {/* 6. DEVELOPER TEAM SECTION (#team - MATCHING REFERENCE SCREENSHOT) */}
-        <section id="team" className="space-y-8 scroll-mt-24 animate-slide-up">
-          <div className="text-center space-y-2">
+        <section id="team" className="space-y-12 scroll-mt-36 pt-20 sm:pt-28 border-t border-[#1e293b]/60 animate-slide-up">
+          <div className="text-center space-y-3">
             <span className="text-xs font-black uppercase text-purple-400 tracking-wider">ENGINEERING EXCELLENCE</span>
             <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight">Meet Our Developer & AI Team</h2>
             <p className="text-xs sm:text-sm text-slate-400 max-w-xl mx-auto">
@@ -646,8 +646,8 @@ export default function AuthPage({ onLoginSuccess, onExploreDemo, isDark = true 
         </section>
 
         {/* 7. CONTACT & HELP SECTION (#contact - MATCHING REFERENCE SCREENSHOT) */}
-        <section id="contact" className="space-y-8 scroll-mt-24 animate-slide-up">
-          <div className="text-center space-y-2">
+        <section id="contact" className="space-y-12 scroll-mt-36 pt-20 sm:pt-28 border-t border-[#1e293b]/60 animate-slide-up">
+          <div className="text-center space-y-3">
             <div className="inline-flex items-center gap-2 bg-sky-500/10 border border-sky-500/30 text-sky-400 text-xs font-black px-4 py-1.5 rounded-full shadow-inner">
               <Mail className="w-4 h-4" /> Get In Touch
             </div>
