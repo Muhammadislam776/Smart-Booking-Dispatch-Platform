@@ -123,28 +123,38 @@ export default function AuthPage({ onLoginSuccess, onExploreDemo, isDark = true 
 
   const devTeam = [
     {
+      name: 'Muhammad Abdullah',
+      roleBadge: '⚡ Super Admin & Lead Developer',
+      bio: 'Full-stack developer specializing in modern web technologies and scalable systems architecture.',
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=250',
+      borderColor: 'border-purple-500',
+      glowColor: 'shadow-[0_0_30px_rgba(168,85,247,0.4)]',
+      badgeBg: 'bg-purple-500/20 text-purple-300 border-purple-500/30',
+      portfolioUrl: 'https://muhammadabdullahcv.vercel.app/',
+      skills: [
+        { icon: '🤖', title: 'AI Consultant' },
+        { icon: '🎯', title: 'FYP to Product Specialist' },
+        { icon: '📚', title: 'CS Career & Research Mentor' },
+        { icon: '💼', title: '12+ Years in Development, Automation & Freelancing' },
+        { icon: '🎓', title: 'Lecturer @ COMSATS' },
+      ],
+    },
+    {
       name: 'Muhammad Islam',
-      role: 'Lead AI & Full-Stack Architect',
-      specs: 'Next.js 15, TypeScript, Socket.IO, Real-Time Dispatch Engine',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200',
-    },
-    {
-      name: 'Sana Khan',
-      role: 'MongoDB Atlas & Database Systems Specialist',
-      specs: 'Mongoose Normalization, Multi-Tenant Security & REST APIs',
-      avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=200',
-    },
-    {
-      name: 'David Gascoigne',
-      role: 'Field Service & Telemetry Systems Lead',
-      specs: 'Google Maps API, Live Satellite GPS & Route Optimization',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200',
-    },
-    {
-      name: 'Eleanor Vance',
-      role: 'UI/UX & Customer Experience Specialist',
-      specs: 'Tailwind CSS, Glassmorphism Aesthetics & Micro-Animations',
-      avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=200',
+      roleBadge: '🎓 Student & MERN Stack Developer',
+      bio: 'COMSATS University Islamabad | Full-Stack JavaScript developer passionate about building scalable web applications with modern frameworks.',
+      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=250',
+      borderColor: 'border-sky-500',
+      glowColor: 'shadow-[0_0_30px_rgba(56,189,248,0.4)]',
+      badgeBg: 'bg-sky-500/20 text-sky-300 border-sky-500/30',
+      portfolioUrl: 'https://muhammadislamcv.vercel.app/',
+      skills: [
+        { icon: '⚛️', title: 'React & Next.js Specialist' },
+        { icon: '🔧', title: 'Node.js & Express Backend' },
+        { icon: '💾', title: 'MongoDB & Database Design' },
+        { icon: '🚀', title: 'Full-Stack Web Development' },
+        { icon: '🎨', title: 'UI/UX & Responsive Design' },
+      ],
     },
   ];
 
@@ -357,37 +367,73 @@ export default function AuthPage({ onLoginSuccess, onExploreDemo, isDark = true 
           </div>
         </div>
 
-        {/* DEVELOPER TEAM SECTION (SPECIAL REQUEST) */}
+        {/* DEVELOPER TEAM SECTION (MATCHING REFERENCE DESIGN) */}
         <section className="space-y-8 pt-6">
           <div className="text-center space-y-2">
-            <span className="text-xs font-black uppercase text-sky-400 tracking-wider">ENGINEERING EXCELLENCE</span>
-            <h2 className="text-2xl sm:text-4xl font-black text-white">Meet Our Developer & AI Team</h2>
-            <p className="text-xs text-slate-400 max-w-xl mx-auto">
+            <span className="text-xs font-black uppercase text-purple-400 tracking-wider">ENGINEERING EXCELLENCE</span>
+            <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight">Meet Our Developer & AI Team</h2>
+            <p className="text-xs sm:text-sm text-slate-400 max-w-xl mx-auto">
               Architecting TradePro 360 with next-generation real-time telemetry, AI dispatching algorithms, and MongoDB Atlas database security.
             </p>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
             {devTeam.map((member, idx) => (
               <div
                 key={idx}
-                className="rounded-3xl bg-[#121824] border border-[#1e293b] p-5 space-y-4 shadow-xl hover:border-sky-500/50 transition-all hover:-translate-y-1.5 group"
+                className="rounded-[2.5rem] bg-[#0c1220]/95 border border-purple-500/30 p-8 flex flex-col items-center text-center space-y-6 shadow-2xl backdrop-blur-xl relative overflow-hidden group hover:border-purple-500/60 transition-all hover:-translate-y-2"
               >
-                <div className="relative overflow-hidden rounded-2xl border border-[#1e293b]">
-                  <img
-                    src={member.avatar}
-                    alt={member.name}
-                    className="w-full h-44 object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <div className="absolute top-2 right-2 px-2.5 py-1 rounded-full bg-slate-950/80 backdrop-blur-md text-[10px] font-black text-sky-400 border border-sky-500/30">
-                    CORE DEV
+                {/* Background Ambient Glow */}
+                <div className="absolute -top-16 -left-16 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute -bottom-16 -right-16 w-48 h-48 bg-sky-500/10 rounded-full blur-3xl pointer-events-none" />
+
+                {/* Circular Avatar with Glowing Ring */}
+                <div className="relative">
+                  <div className={`w-32 h-32 rounded-full border-4 ${member.borderColor} ${member.glowColor} overflow-hidden p-1 bg-[#0b0e14] shadow-2xl`}>
+                    <img
+                      src={member.avatar}
+                      alt={member.name}
+                      className="w-full h-full object-cover rounded-full group-hover:scale-105 transition-transform duration-500"
+                    />
                   </div>
                 </div>
 
-                <div className="space-y-1">
-                  <h3 className="font-black text-base text-white">{member.name}</h3>
-                  <p className="text-xs text-sky-400 font-bold">{member.role}</p>
-                  <p className="text-[11px] text-slate-400 leading-relaxed pt-1">{member.specs}</p>
+                {/* Name & Role Badge */}
+                <div className="space-y-2">
+                  <h3 className="text-2xl font-black text-white tracking-tight">{member.name}</h3>
+                  <div className={`px-4 py-1.5 rounded-full border ${member.badgeBg} text-xs font-bold inline-flex items-center gap-1.5 shadow-md`}>
+                    <span>{member.roleBadge}</span>
+                  </div>
+                </div>
+
+                {/* Bio Description */}
+                <p className="text-xs text-slate-300 leading-relaxed font-medium max-w-md">
+                  {member.bio}
+                </p>
+
+                {/* Skill List */}
+                <div className="w-full space-y-2.5 pt-2 text-left">
+                  {member.skills.map((s, sIdx) => (
+                    <div
+                      key={sIdx}
+                      className="p-3 rounded-2xl bg-[#0b0e14]/90 border border-[#1e293b] text-xs font-semibold text-slate-200 flex items-center gap-3 hover:border-purple-500/50 transition-all shadow-md"
+                    >
+                      <span className="text-base">{s.icon}</span>
+                      <span className="text-slate-200">{s.title}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* View Portfolio Action Button */}
+                <div className="pt-4 w-full">
+                  <a
+                    href={member.portfolioUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-black text-xs shadow-xl shadow-sky-500/25 flex items-center justify-center gap-2 transition-all hover:scale-102"
+                  >
+                    <span>🔗 View Portfolio</span>
+                  </a>
                 </div>
               </div>
             ))}
