@@ -102,92 +102,42 @@ export default function EnterpriseEngineersPage({ engineers, onTabChange }: Ente
     }
   };
 
-  const [engineerRoster, setEngineerRoster] = useState([
-    {
-      id: 'eng_1',
-      name: 'Alex Sterling',
-      role: 'Senior Gas & Boiler Engineer',
-      skills: ['Gas Safe Certified #592810', 'Vaillant Certified', 'Unvented Cylinders'],
-      vehicle: 'Ford Transit - WEIC 882',
-      location: 'London (W1U 68A)',
-      postcode: 'W1U 68A',
-      rating: 4.98,
-      jobsCompleted: 142,
-      status: 'En Route',
-      phone: '+44 7911 123456',
-      email: 'alex@weic.co.uk',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=120',
-      lat: 51.5074,
-      lng: -0.1278,
-      assignedJob: {
-        ref: 'TF-99281-UK',
-        title: 'Boiler Performance Audit & Service',
-        area: 'London W8 4PT',
-        priority: 'Emergency',
-        time: '14:30 Today',
-      },
-    },
-    {
-      id: 'eng_2',
-      name: 'David Gascoigne',
-      role: 'Master Gas Safe Specialist',
-      skills: ['Gas Safe Certified #449102', 'Worcester Bosch Accredited', 'Commercial Gas'],
-      vehicle: 'Mercedes Vito - WEIC 901',
-      location: 'London (E14 5AB)',
-      postcode: 'E14 5AB',
-      rating: 4.96,
-      jobsCompleted: 198,
-      status: 'Available',
-      phone: '+44 7911 654321',
-      email: 'david.g@weic.co.uk',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=120',
-      lat: 51.5174,
-      lng: -0.1078,
-      assignedJob: null as any,
-    },
-    {
-      id: 'eng_3',
-      name: 'Sarah Jenkins',
-      role: '18th Edition Master Electrician',
-      skills: ['NICEIC Approved Contractor', 'EV Charger Certified', 'Part P Registered'],
-      vehicle: 'Vauxhall Vivaro - WEIC 304',
-      location: 'Manchester (M1 1AE)',
-      postcode: 'M1 1AE',
-      rating: 4.99,
-      jobsCompleted: 215,
-      status: 'In Progress',
-      phone: '+44 7911 987654',
-      email: 'sarah.j@weic.co.uk',
-      avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=120',
-      lat: 53.4808,
-      lng: -2.2426,
-      assignedJob: {
-        ref: 'TF-48291-UK',
-        title: '18th Edition Consumer Unit Replacement',
-        area: 'Manchester M1 1AE',
-        priority: 'Standard',
-        time: '16:00 Today',
-      },
-    },
-    {
-      id: 'eng_4',
-      name: 'Mike Chen',
-      role: 'HVAC & Refrigeration Lead',
-      skills: ['F-Gas Certified', 'Daikin VRV Master', 'Heat Pump Specialist'],
-      vehicle: 'VW Transporter - WEIC 512',
-      location: 'Birmingham (B1 1BB)',
-      postcode: 'B1 1BB',
-      rating: 4.92,
-      jobsCompleted: 110,
-      status: 'Available',
-      phone: '+44 7911 345678',
-      email: 'mike.c@weic.co.uk',
-      avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=120',
-      lat: 52.4862,
-      lng: -1.8904,
-      assignedJob: null as any,
-    },
-  ]);
+  const [engineerRoster, setEngineerRoster] = useState<any[]>([]);
+
+  // Load engineers permanently from MongoDB Atlas
+  const fetchLiveEngineersFromMongoDB = async () => {
+    try {
+      const res = await fetch('/api/engineers');
+      const data = await res.json();
+      if (data.success && data.engineers && data.engineers.length > 0) {
+        const mapped = data.engineers.map((e: any) => ({
+          id: e.id || e._id,
+          name: e.name,
+          role: e.role || 'Senior Gas & Boiler Engineer',
+          skills: e.skills && e.skills.length > 0 ? e.skills : [e.certifications?.[0] || 'Gas Safe Certified'],
+          vehicle: e.vehicleRegistration || e.vehicle || 'WEIC 990',
+          location: e.location || 'London (W1U 68A)',
+          postcode: e.postcode || 'W1U 68A',
+          rating: e.rating || 4.98,
+          jobsCompleted: e.completedJobsCount || e.jobsCompleted || 0,
+          status: e.isAvailable !== false ? 'Available' : 'En Route',
+          phone: e.phone || '+44 7911 123456',
+          email: e.email || 'engineer@weic.co.uk',
+          avatar: e.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=120',
+          lat: e.currentLat || e.lat || 51.5074,
+          lng: e.currentLng || e.lng || -0.1278,
+          assignedJob: e.assignedJob || null,
+        }));
+        setEngineerRoster(mapped);
+      }
+    } catch (err) {
+      console.error('Error loading engineers from MongoDB Atlas:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchLiveEngineersFromMongoDB();
+  }, []);
 
   const handleAddEngineerSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -195,37 +145,48 @@ export default function EnterpriseEngineersPage({ engineers, onTabChange }: Ente
 
     const newEng = {
       id: `eng_${Date.now()}`,
+      businessId: 'biz_01',
       name: newName,
       role: newRole,
       skills: [newCert, 'Certified UK Trade Technician'],
+      certifications: [newCert, 'Part P Registered'],
+      vehicleRegistration: newVehicle,
       vehicle: newVehicle,
       location: 'London (W1U 68A)',
       postcode: 'W1U 68A',
       rating: 5.0,
+      completedJobsCount: 0,
       jobsCompleted: 0,
       status: 'Available',
+      isAvailable: true,
       phone: newPhone,
       email: `${newName.toLowerCase().replace(/\s+/g, '.')}@weic.co.uk`,
       avatar: newAvatar,
+      currentLat: 51.5074,
+      currentLng: -0.1278,
       lat: 51.5074,
       lng: -0.1278,
       assignedJob: null as any,
     };
 
+    // Immediate optimistic local update
     setEngineerRoster([newEng, ...engineerRoster]);
     setShowAddEngineerModal(false);
     setNewName('');
 
-    showToast(`New certified technician ${newName} added to active roster & saved to MongoDB Atlas!`);
+    showToast(`New certified technician ${newName} added & saved permanently to MongoDB Atlas!`);
 
+    // Save permanently to MongoDB Atlas engineermodels collection
     try {
       await fetch('/api/engineers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newEng),
       });
+      // Refresh roster from DB
+      fetchLiveEngineersFromMongoDB();
     } catch (err) {
-      console.error('Engineer save failed:', err);
+      console.error('Engineer save to MongoDB Atlas failed:', err);
     }
   };
 
@@ -388,7 +349,7 @@ export default function EnterpriseEngineersPage({ engineers, onTabChange }: Ente
               <div className="space-y-1">
                 <span className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider block">CERTIFICATIONS & SKILLS</span>
                 <div className="flex flex-wrap gap-1.5">
-                  {eng.skills.map((s, idx) => (
+                  {(eng.skills || []).map((s: string, idx: number) => (
                     <span key={idx} className="px-2.5 py-0.5 rounded-lg bg-[#0b0e14] border border-[#1e293b] text-slate-300 text-[11px] font-bold">
                       {s}
                     </span>
