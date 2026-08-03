@@ -6,7 +6,6 @@ import {
   Wrench,
   ShieldCheck,
   Building2,
-  Radio,
   UserCheck,
   Mail,
   Lock,
@@ -23,6 +22,12 @@ import {
   KeyRound,
   X,
   HelpCircle,
+  Code2,
+  Database,
+  Layers,
+  Zap,
+  Server,
+  Terminal,
 } from 'lucide-react';
 
 interface AuthPageProps {
@@ -33,6 +38,8 @@ interface AuthPageProps {
 
 export default function AuthPage({ onLoginSuccess, onExploreDemo, isDark = true }: AuthPageProps) {
   const [mode, setMode] = useState<'login' | 'signup'>('login');
+  const [activeNav, setActiveNav] = useState<'home' | 'how_it_works' | 'features' | 'team' | 'contact'>('home');
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -55,7 +62,9 @@ export default function AuthPage({ onLoginSuccess, onExploreDemo, isDark = true 
     setPassword('password123');
     setRole(demoUser.role);
     setErrorMessage(null);
-    setSuccessMessage(`Preset credentials filled for ${demoUser.name}. Click "Sign In to Dashboard" below to verify.`);
+    setSuccessMessage(`Preset filled for ${demoUser.name}. Click "Sign In to Dashboard" to verify.`);
+    setShowAuthModal(true);
+    setMode('login');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -69,13 +78,7 @@ export default function AuthPage({ onLoginSuccess, onExploreDemo, isDark = true 
         const res = await fetch('/api/auth/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name,
-            email,
-            password,
-            role,
-            phone,
-          }),
+          body: JSON.stringify({ name, email, password, role, phone }),
         });
 
         const data = await res.json();
@@ -84,8 +87,7 @@ export default function AuthPage({ onLoginSuccess, onExploreDemo, isDark = true 
         if (!data.success) {
           setErrorMessage(data.message || 'Registration failed.');
         } else {
-          // REQUIRE LOGIN AFTER REGISTER: Redirect to login tab with success notification!
-          setSuccessMessage(`Account for ${name} registered in MongoDB! Please Sign In below with your credentials.`);
+          setSuccessMessage(`Account for ${name} registered in MongoDB! Please Sign In with your credentials.`);
           setMode('login');
           setPassword('');
         }
@@ -94,7 +96,6 @@ export default function AuthPage({ onLoginSuccess, onExploreDemo, isDark = true 
         setErrorMessage('Failed to connect to registration server.');
       }
     } else {
-      // Login Flow querying MongoDB Atlas
       try {
         const res = await fetch('/api/auth/login', {
           method: 'POST',
@@ -120,419 +121,387 @@ export default function AuthPage({ onLoginSuccess, onExploreDemo, isDark = true 
     }
   };
 
-  const handleResetPassword = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (resetEmail.trim()) {
-      setResetSent(true);
-      setTimeout(() => {
-        setResetSent(false);
-        setShowForgotModal(false);
-        setResetEmail('');
-        setSuccessMessage(`Password reset link sent to ${resetEmail}! Please check your inbox.`);
-      }, 1200);
-    }
-  };
+  const devTeam = [
+    {
+      name: 'Muhammad Islam',
+      role: 'Lead AI & Full-Stack Architect',
+      specs: 'Next.js 15, TypeScript, Socket.IO, Real-Time Dispatch Engine',
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200',
+    },
+    {
+      name: 'Sana Khan',
+      role: 'MongoDB Atlas & Database Systems Specialist',
+      specs: 'Mongoose Normalization, Multi-Tenant Security & REST APIs',
+      avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=200',
+    },
+    {
+      name: 'David Gascoigne',
+      role: 'Field Service & Telemetry Systems Lead',
+      specs: 'Google Maps API, Live Satellite GPS & Route Optimization',
+      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200',
+    },
+    {
+      name: 'Eleanor Vance',
+      role: 'UI/UX & Customer Experience Specialist',
+      specs: 'Tailwind CSS, Glassmorphism Aesthetics & Micro-Animations',
+      avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=200',
+    },
+  ];
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex flex-col justify-between relative overflow-hidden font-sans">
-      {/* Dynamic Background Mesh & Glowing Orbs */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(14,165,233,0.28),rgba(255,255,255,0))]" />
+    <div className="min-h-screen bg-[#080b11] text-white flex flex-col justify-between relative overflow-hidden font-sans">
+      {/* Background Glow Orbs & Grid */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(14,165,233,0.22),transparent)]" />
       <div className="absolute top-1/4 left-10 w-96 h-96 bg-sky-500/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-1/4 right-10 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute inset-0 bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:24px_24px] opacity-10 pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:32px_32px] opacity-10 pointer-events-none" />
 
-      {/* Header Navigation */}
-      <header className="relative z-10 max-w-7xl mx-auto w-full px-6 py-6 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center text-white shadow-xl shadow-sky-500/30 ring-2 ring-sky-400/20">
-            <Wrench className="w-6 h-6" />
+      {/* TOP NAVBAR HEADER (MATCHING SMART CLEARANCE STYLE) */}
+      <header className="relative z-20 max-w-7xl mx-auto w-full px-6 py-5 flex items-center justify-between border-b border-[#1e293b]/60 backdrop-blur-md">
+        <div className="flex items-center gap-3 cursor-pointer" onClick={() => setActiveNav('home')}>
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-sky-500/30 ring-2 ring-sky-400/20">
+            <Wrench className="w-5 h-5" />
           </div>
           <div>
-            <span className="font-black text-xl tracking-tight">TradePro <span className="text-sky-400">360</span></span>
-            <span className="block text-[11px] text-slate-400 font-extrabold uppercase">WEIC Smart Trade Solutions UK</span>
+            <span className="font-black text-xl tracking-tight text-white">
+              TradePro <span className="text-sky-400">360</span>
+            </span>
           </div>
         </div>
 
+        {/* Center Navigation Links */}
+        <nav className="hidden md:flex items-center gap-6 text-xs font-bold text-slate-300">
+          <button
+            onClick={() => setActiveNav('home')}
+            className={`hover:text-white transition-colors ${activeNav === 'home' ? 'text-sky-400 font-extrabold' : ''}`}
+          >
+            How It Works
+          </button>
+          <button
+            onClick={() => setActiveNav('features')}
+            className={`hover:text-white transition-colors ${activeNav === 'features' ? 'text-sky-400 font-extrabold' : ''}`}
+          >
+            Features
+          </button>
 
+          <button
+            onClick={() => setActiveNav('team')}
+            className={`hover:text-white transition-colors ${activeNav === 'team' ? 'text-sky-400 font-extrabold' : ''}`}
+          >
+            Developer Team
+          </button>
+          <button
+            onClick={() => setActiveNav('contact')}
+            className={`hover:text-white transition-colors ${activeNav === 'contact' ? 'text-sky-400 font-extrabold' : ''}`}
+          >
+            Contact
+          </button>
+        </nav>
+
+        {/* Right Header Action Buttons */}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => {
+              setMode('signup');
+              setShowAuthModal(true);
+            }}
+            className="px-5 py-2 rounded-full border border-sky-500/40 text-sky-300 hover:bg-sky-500/10 font-bold text-xs transition-all shadow-md"
+          >
+            Register
+          </button>
+          <button
+            onClick={() => {
+              setMode('login');
+              setShowAuthModal(true);
+            }}
+            className="px-5 py-2 rounded-full bg-[#0ea5e9] hover:bg-sky-400 text-slate-950 font-black text-xs transition-all shadow-lg shadow-sky-500/30"
+          >
+            Login
+          </button>
+        </div>
       </header>
 
-      {/* Main Content Layout */}
-      <main className="relative z-10 max-w-6xl mx-auto w-full px-4 py-8 grid lg:grid-cols-12 gap-8 items-center flex-1">
-        {/* Left Side: Product Showcase & Value Props */}
-        <div className="lg:col-span-6 space-y-6">
-          <div className="inline-flex items-center gap-2 bg-sky-500/10 border border-sky-500/30 text-sky-300 text-xs font-black px-3.5 py-1.5 rounded-full shadow-inner">
-            <ShieldCheck className="w-4 h-4 text-sky-400" /> WEIC Enterprise Trade SaaS Platform
+      {/* MAIN LANDING BODY CONTENT */}
+      <main className="relative z-10 max-w-6xl mx-auto w-full px-4 py-10 space-y-16 flex-1">
+        {/* HERO SECTION */}
+        <div className="text-center space-y-6 max-w-4xl mx-auto pt-6 animate-slide-up">
+          <div className="inline-flex items-center gap-2 bg-[#0b0e14] border border-sky-500/30 text-sky-400 text-xs font-black px-4 py-1.5 rounded-full shadow-xl">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+            <span>WEIC SMART TRADE SOLUTIONS UK — Official SaaS Platform</span>
           </div>
 
-          <h1 className="text-3xl sm:text-5xl font-black leading-tight tracking-tight">
-            AI-Powered Booking & Dispatch System for UK Tradesmen
+          <h1 className="text-4xl sm:text-6xl font-black tracking-tight leading-tight text-white">
+            Smart Booking & <br />
+            <span className="bg-gradient-to-r from-sky-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent">
+              AI Dispatch System for UK Tradesmen
+            </span>
           </h1>
 
-          <p className="text-slate-300 text-sm leading-relaxed">
-            Automate your complete trade business workflow: 1-Click AI engineer dispatching, live GPS satellite tracking, dynamic Screwfix/Plumbase parts pricing, and Stripe invoice payments.
+          <p className="text-slate-300 text-sm sm:text-base leading-relaxed max-w-2xl mx-auto font-medium">
+            Streamline your trade business. Apply for bookings, track live engineer GPS, and receive instant invoices — all in one secure platform.
           </p>
 
-          {/* Key Feature Cards */}
-          <div className="grid sm:grid-cols-2 gap-3.5 pt-2">
-            <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800/90 backdrop-blur-md space-y-1 shadow-lg">
-              <div className="flex items-center gap-2">
-                <div className="p-2 rounded-xl bg-indigo-500/20 text-indigo-400">
-                  <Cpu className="w-4 h-4" />
-                </div>
-                <h4 className="font-extrabold text-xs">AI Smart Dispatch</h4>
-              </div>
-              <p className="text-[11px] text-slate-400 pl-8">GPS Proximity & Skill Scoring</p>
-            </div>
+          {/* CTA Buttons (Matching Smart Clearance Hero) */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+            <button
+              onClick={() => {
+                setMode('login');
+                setShowAuthModal(true);
+              }}
+              className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-gradient-to-r from-sky-500 to-indigo-600 text-white font-black text-sm flex items-center justify-center gap-2 shadow-xl shadow-sky-500/30 hover:scale-105 transition-all"
+            >
+              <span>🔑 Sign In →</span>
+            </button>
 
-            <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800/90 backdrop-blur-md space-y-1 shadow-lg">
-              <div className="flex items-center gap-2">
-                <div className="p-2 rounded-xl bg-emerald-500/20 text-emerald-400">
-                  <Globe className="w-4 h-4" />
-                </div>
-                <h4 className="font-extrabold text-xs">Google Business Profile</h4>
-              </div>
-              <p className="text-[11px] text-slate-400 pl-8">"Book Free Quote" Widget</p>
-            </div>
+            <button
+              onClick={() => {
+                setMode('signup');
+                setShowAuthModal(true);
+              }}
+              className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-[#121824] hover:bg-slate-800 border border-[#1e293b] text-slate-200 font-bold text-sm flex items-center justify-center gap-2 shadow-lg hover:border-sky-500/50 transition-all"
+            >
+              <span>✨ Register</span>
+            </button>
           </div>
         </div>
 
-        {/* Right Side: Rebuilt Executive Authentication Card */}
-        <div className="lg:col-span-6 flex justify-center">
-          <div className="w-full max-w-md bg-slate-900/95 border border-slate-800/90 rounded-3xl p-6 md:p-8 shadow-2xl backdrop-blur-2xl space-y-5 relative">
-            {/* Top Header Tabs */}
-            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-              <div>
-                <div className="flex items-center gap-1.5 text-xs text-sky-400 font-extrabold">
-                  <KeyRound className="w-4 h-4" /> MongoDB Atlas Authentication
-                </div>
-                <h2 className="text-xl font-black mt-0.5">
-                  {mode === 'login' ? 'Sign In to TradePro' : 'Create WEIC Trade Account'}
-                </h2>
-              </div>
+        {/* QUICK ONE-CLICK LOGIN ROLE PRESETS BAR */}
+        <div className="rounded-3xl bg-[#121824]/90 border border-[#1e293b] p-6 shadow-2xl space-y-4 max-w-4xl mx-auto backdrop-blur-xl">
+          <div className="flex items-center justify-between border-b border-[#1e293b] pb-3">
+            <span className="text-xs font-black uppercase text-sky-400 tracking-wider flex items-center gap-2">
+              <Zap className="w-4 h-4 text-amber-400" /> One-Click Persona Login Portals:
+            </span>
+            <span className="text-[11px] text-slate-400">Connected to MongoDB Atlas</span>
+          </div>
 
-              <div className="flex bg-slate-950 p-1 rounded-xl text-xs font-bold border border-slate-800">
-                <button
-                  onClick={() => {
-                    setMode('login');
-                    setErrorMessage(null);
-                    setSuccessMessage(null);
-                  }}
-                  className={`px-3 py-1.5 rounded-lg transition-all ${
-                    mode === 'login' ? 'bg-sky-600 text-white font-extrabold shadow-md' : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  Sign In
-                </button>
-                <button
-                  onClick={() => {
-                    setMode('signup');
-                    setErrorMessage(null);
-                    setSuccessMessage(null);
-                  }}
-                  className={`px-3 py-1.5 rounded-lg transition-all ${
-                    mode === 'signup' ? 'bg-sky-600 text-white font-extrabold shadow-md' : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  Register
-                </button>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {/* 1. Business Owner */}
+            <button
+              onClick={() =>
+                handleSelectPreset({
+                  email: 'sanajavaidkhan44@weic.co.uk',
+                  name: 'Sana Khan (Business Owner)',
+                  role: 'business_owner',
+                })
+              }
+              className="p-3.5 rounded-2xl bg-[#0b0e14] hover:bg-[#182234] border border-[#1e293b] hover:border-sky-500/60 text-left flex flex-col justify-between gap-2 transition-all hover:scale-105 shadow-md group cursor-pointer"
+            >
+              <div className="w-8 h-8 rounded-xl bg-sky-500/20 text-sky-400 flex items-center justify-center border border-sky-500/30 group-hover:scale-110 transition-all">
+                <Building2 className="w-4 h-4" />
               </div>
+              <div>
+                <div className="font-black text-white text-xs">Business Owner</div>
+                <div className="text-[10px] text-sky-400 font-bold">Sana Khan</div>
+              </div>
+            </button>
+
+            {/* 2. Field Engineer */}
+            <button
+              onClick={() =>
+                handleSelectPreset({
+                  email: 'david.g@weic.co.uk',
+                  name: 'David Gascoigne (Engineer)',
+                  role: 'engineer',
+                })
+              }
+              className="p-3.5 rounded-2xl bg-[#0b0e14] hover:bg-[#182234] border border-[#1e293b] hover:border-emerald-500/60 text-left flex flex-col justify-between gap-2 transition-all hover:scale-105 shadow-md group cursor-pointer"
+            >
+              <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center border border-emerald-500/30 group-hover:scale-110 transition-all">
+                <Wrench className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="font-black text-white text-xs">Field Engineer</div>
+                <div className="text-[10px] text-emerald-400 font-bold">David Gascoigne</div>
+              </div>
+            </button>
+
+            {/* 3. Customer */}
+            <button
+              onClick={() =>
+                handleSelectPreset({
+                  email: 'eleanor.vance@example.co.uk',
+                  name: 'Eleanor Vance (Customer)',
+                  role: 'customer',
+                })
+              }
+              className="p-3.5 rounded-2xl bg-[#0b0e14] hover:bg-[#182234] border border-[#1e293b] hover:border-purple-500/60 text-left flex flex-col justify-between gap-2 transition-all hover:scale-105 shadow-md group cursor-pointer"
+            >
+              <div className="w-8 h-8 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center border border-purple-500/30 group-hover:scale-110 transition-all">
+                <UserCheck className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="font-black text-white text-xs">UK Customer</div>
+                <div className="text-[10px] text-purple-400 font-bold">Eleanor Vance</div>
+              </div>
+            </button>
+
+            {/* 4. Super Admin */}
+            <button
+              onClick={() =>
+                handleSelectPreset({
+                  email: 'admin@weic.co.uk',
+                  name: 'Super Admin',
+                  role: 'super_admin',
+                })
+              }
+              className="p-3.5 rounded-2xl bg-[#0b0e14] hover:bg-[#182234] border border-[#1e293b] hover:border-rose-500/60 text-left flex flex-col justify-between gap-2 transition-all hover:scale-105 shadow-md group cursor-pointer"
+            >
+              <div className="w-8 h-8 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center border border-rose-500/30 group-hover:scale-110 transition-all">
+                <ShieldCheck className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="font-black text-white text-xs">Super Admin</div>
+                <div className="text-[10px] text-rose-400 font-bold">SaaS HQ</div>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        {/* DEVELOPER TEAM SECTION (SPECIAL REQUEST) */}
+        <section className="space-y-8 pt-6">
+          <div className="text-center space-y-2">
+            <span className="text-xs font-black uppercase text-sky-400 tracking-wider">ENGINEERING EXCELLENCE</span>
+            <h2 className="text-2xl sm:text-4xl font-black text-white">Meet Our Developer & AI Team</h2>
+            <p className="text-xs text-slate-400 max-w-xl mx-auto">
+              Architecting TradePro 360 with next-generation real-time telemetry, AI dispatching algorithms, and MongoDB Atlas database security.
+            </p>
+          </div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {devTeam.map((member, idx) => (
+              <div
+                key={idx}
+                className="rounded-3xl bg-[#121824] border border-[#1e293b] p-5 space-y-4 shadow-xl hover:border-sky-500/50 transition-all hover:-translate-y-1.5 group"
+              >
+                <div className="relative overflow-hidden rounded-2xl border border-[#1e293b]">
+                  <img
+                    src={member.avatar}
+                    alt={member.name}
+                    className="w-full h-44 object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className="absolute top-2 right-2 px-2.5 py-1 rounded-full bg-slate-950/80 backdrop-blur-md text-[10px] font-black text-sky-400 border border-sky-500/30">
+                    CORE DEV
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <h3 className="font-black text-base text-white">{member.name}</h3>
+                  <p className="text-xs text-sky-400 font-bold">{member.role}</p>
+                  <p className="text-[11px] text-slate-400 leading-relaxed pt-1">{member.specs}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      </main>
+
+      {/* AUTHENTICATION MODAL DIALOG */}
+      {showAuthModal && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-[#121824] border border-[#1e293b] rounded-3xl p-6 sm:p-8 shadow-2xl space-y-5 animate-scale-in relative">
+            <button
+              onClick={() => setShowAuthModal(false)}
+              className="absolute top-5 right-5 p-2 rounded-xl bg-[#0b0e14] text-slate-400 hover:text-white"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Modal Title */}
+            <div className="border-b border-[#1e293b] pb-4">
+              <div className="flex items-center gap-2 text-xs font-bold text-sky-400">
+                <KeyRound className="w-4 h-4" /> MongoDB Atlas Authentication
+              </div>
+              <h2 className="text-xl font-black text-white mt-1">
+                {mode === 'login' ? 'Sign In to TradePro 360' : 'Create Trade Account'}
+              </h2>
             </div>
 
-            {/* Error Message Toast */}
+            {/* Error & Success Toasts */}
             {errorMessage && (
-              <div className="p-3.5 bg-rose-500/10 border border-rose-500/30 text-rose-300 rounded-2xl text-xs font-bold flex items-start gap-2.5 animate-in fade-in shadow-md">
-                <AlertCircle className="w-4 h-4 shrink-0 text-rose-400 mt-0.5" />
+              <div className="p-3.5 bg-rose-500/10 border border-rose-500/30 text-rose-300 rounded-2xl text-xs font-bold flex items-center gap-2.5">
+                <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
                 <span>{errorMessage}</span>
               </div>
             )}
 
-            {/* Success Message Toast */}
             {successMessage && (
-              <div className="p-3.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-200 rounded-2xl text-xs font-bold flex items-center gap-2.5 animate-in fade-in shadow-md">
+              <div className="p-3.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-200 rounded-2xl text-xs font-bold flex items-center gap-2.5">
                 <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
                 <span>{successMessage}</span>
               </div>
             )}
 
-            {/* Quick Demo Sign In Presets */}
-            <div className="space-y-2">
-              <span className="text-[10px] font-black uppercase text-sky-400 tracking-wider block">
-                SELECT LOGIN ROLE PORTAL (ONE-CLICK PRE-FILL):
-              </span>
-              <div className="grid grid-cols-2 gap-2.5 text-[11px]">
-                {/* 1. Business Owner */}
-                <button
-                  type="button"
-                  onClick={() =>
-                    handleSelectPreset({
-                      email: 'sanajavaidkhan44@weic.co.uk',
-                      name: 'Sana Khan (Business Owner)',
-                      role: 'business_owner',
-                    })
-                  }
-                  className="p-3 rounded-2xl bg-[#0b0e14] hover:bg-[#121824] border border-[#1e293b] hover:border-sky-500/60 text-slate-100 font-bold text-left flex items-center gap-2.5 transition-all hover:scale-102 shadow-lg group cursor-pointer"
-                >
-                  <div className="w-8 h-8 rounded-xl bg-sky-500/20 text-sky-400 flex items-center justify-center border border-sky-500/30 group-hover:scale-110 transition-all shrink-0">
-                    <Building2 className="w-4 h-4" />
-                  </div>
-                  <div className="truncate">
-                    <div className="font-black text-white text-xs truncate">Business Owner</div>
-                    <div className="text-[10px] text-sky-400 font-bold">Sana Khan</div>
-                  </div>
-                </button>
-
-                {/* 2. Field Engineer */}
-                <button
-                  type="button"
-                  onClick={() =>
-                    handleSelectPreset({
-                      email: 'david.g@weic.co.uk',
-                      name: 'David Gascoigne (Engineer)',
-                      role: 'engineer',
-                    })
-                  }
-                  className="p-3 rounded-2xl bg-[#0b0e14] hover:bg-[#121824] border border-[#1e293b] hover:border-emerald-500/60 text-slate-100 font-bold text-left flex items-center gap-2.5 transition-all hover:scale-102 shadow-lg group cursor-pointer"
-                >
-                  <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center border border-emerald-500/30 group-hover:scale-110 transition-all shrink-0">
-                    <Wrench className="w-4 h-4" />
-                  </div>
-                  <div className="truncate">
-                    <div className="font-black text-white text-xs truncate">Field Engineer</div>
-                    <div className="text-[10px] text-emerald-400 font-bold">David Gascoigne</div>
-                  </div>
-                </button>
-
-                {/* 3. Customer */}
-                <button
-                  type="button"
-                  onClick={() =>
-                    handleSelectPreset({
-                      email: 'eleanor.vance@example.co.uk',
-                      name: 'Eleanor Vance (Customer)',
-                      role: 'customer',
-                    })
-                  }
-                  className="p-3 rounded-2xl bg-[#0b0e14] hover:bg-[#121824] border border-[#1e293b] hover:border-purple-500/60 text-slate-100 font-bold text-left flex items-center gap-2.5 transition-all hover:scale-102 shadow-lg group cursor-pointer"
-                >
-                  <div className="w-8 h-8 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center border border-purple-500/30 group-hover:scale-110 transition-all shrink-0">
-                    <UserCheck className="w-4 h-4" />
-                  </div>
-                  <div className="truncate">
-                    <div className="font-black text-white text-xs truncate">UK Customer</div>
-                    <div className="text-[10px] text-purple-400 font-bold">Eleanor Vance</div>
-                  </div>
-                </button>
-
-                {/* 4. Super Admin */}
-                <button
-                  type="button"
-                  onClick={() =>
-                    handleSelectPreset({
-                      email: 'admin@weic.co.uk',
-                      name: 'Super Admin',
-                      role: 'super_admin',
-                    })
-                  }
-                  className="p-3 rounded-2xl bg-[#0b0e14] hover:bg-[#121824] border border-[#1e293b] hover:border-rose-500/60 text-slate-100 font-bold text-left flex items-center gap-2.5 transition-all hover:scale-102 shadow-lg group cursor-pointer"
-                >
-                  <div className="w-8 h-8 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center border border-rose-500/30 group-hover:scale-110 transition-all shrink-0">
-                    <ShieldCheck className="w-4 h-4" />
-                  </div>
-                  <div className="truncate">
-                    <div className="font-black text-white text-xs truncate">Super Admin</div>
-                    <div className="text-[10px] text-rose-400 font-bold">SaaS Admin HQ</div>
-                  </div>
-                </button>
-              </div>
-            </div>
-
-            <div className="relative flex py-1 items-center">
-              <div className="flex-grow border-t border-slate-800"></div>
-              <span className="flex-shrink mx-3 text-[10px] uppercase font-black text-slate-400">
-                Or {mode === 'login' ? 'Sign In With Credentials' : 'Register New Account'}
-              </span>
-              <div className="flex-grow border-t border-slate-800"></div>
-            </div>
-
             {/* Auth Form */}
             <form onSubmit={handleSubmit} className="space-y-4">
               {mode === 'signup' && (
-                <>
-                  <div>
-                    <label className="block text-[11px] font-bold uppercase text-slate-400 mb-1">
-                      Full Name
-                    </label>
-                    <div className="relative">
-                      <UserIcon className="absolute left-3.5 top-3 w-4 h-4 text-slate-400" />
-                      <input
-                        type="text"
-                        required
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        placeholder="e.g. Sana Khan"
-                        className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white font-semibold text-xs outline-none focus:ring-2 focus:ring-sky-500 transition-all"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-bold uppercase text-slate-400 mb-1">
-                      Account Role / Persona
-                    </label>
-                    <select
-                      value={role}
-                      onChange={(e) => setRole(e.target.value as UserRole)}
-                      className="w-full px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white font-bold text-xs outline-none focus:ring-2 focus:ring-sky-500 transition-all"
-                    >
-                      <option value="business_owner">Business Owner (Trade Company)</option>
-                      <option value="dispatcher">AI Dispatch Controller</option>
-                      <option value="engineer">Field Engineer / Technician</option>
-                      <option value="customer">Customer / Homeowner</option>
-                      <option value="super_admin">Super Admin (SaaS Control)</option>
-                    </select>
-                  </div>
-                </>
+                <div>
+                  <label className="text-xs font-extrabold text-slate-300 block mb-1.5">FULL NAME</label>
+                  <input
+                    type="text"
+                    required
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="e.g. Sana Khan"
+                    className="w-full px-4 py-3 rounded-xl bg-[#0b0e14] border border-[#1e293b] text-slate-200 text-xs font-medium outline-none focus:border-sky-500 transition-all"
+                  />
+                </div>
               )}
 
               <div>
-                <label className="block text-[11px] font-bold uppercase text-slate-400 mb-1">
-                  Email Address
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3.5 top-3 w-4 h-4 text-slate-400" />
-                  <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="e.g. shanzy@gmail.com"
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white font-semibold text-xs outline-none focus:ring-2 focus:ring-sky-500 transition-all"
-                  />
-                </div>
+                <label className="text-xs font-extrabold text-slate-300 block mb-1.5">EMAIL ADDRESS</label>
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="e.g. sanajavaidkhan44@weic.co.uk"
+                  className="w-full px-4 py-3 rounded-xl bg-[#0b0e14] border border-[#1e293b] text-slate-200 text-xs font-medium outline-none focus:border-sky-500 transition-all"
+                />
               </div>
 
-              {/* Password Field with Interactive Eye Toggle Icon */}
               <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="block text-[11px] font-bold uppercase text-slate-400">
-                    Password
-                  </label>
-                  {mode === 'login' && (
-                    <button
-                      type="button"
-                      onClick={() => setShowForgotModal(true)}
-                      className="text-[11px] font-extrabold text-sky-400 hover:text-sky-300 transition-colors"
-                    >
-                      Forgot Password?
-                    </button>
-                  )}
-                </div>
+                <label className="text-xs font-extrabold text-slate-300 block mb-1.5">PASSWORD</label>
                 <div className="relative">
-                  <Lock className="absolute left-3.5 top-3 w-4 h-4 text-slate-400" />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••••••"
-                    className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white font-semibold text-xs outline-none focus:ring-2 focus:ring-sky-500 transition-all"
+                    className="w-full px-4 py-3 rounded-xl bg-[#0b0e14] border border-[#1e293b] text-slate-200 text-xs font-medium outline-none focus:border-sky-500 transition-all pr-10"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-2.5 text-slate-400 hover:text-white transition-colors"
-                    title={showPassword ? 'Hide Password' : 'Show Password'}
+                    className="absolute right-3 top-3 text-slate-400 hover:text-white"
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
               </div>
 
-              {/* Remember Me Option */}
-              {mode === 'login' && (
-                <div className="flex items-center justify-between text-xs text-slate-400 pt-1">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={rememberMe}
-                      onChange={(e) => setRememberMe(e.target.checked)}
-                      className="w-4 h-4 rounded text-sky-500 focus:ring-sky-500 bg-slate-950 border-slate-800"
-                    />
-                    <span>Remember me on this browser</span>
-                  </label>
-                </div>
-              )}
-
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-black text-xs shadow-xl flex items-center justify-center gap-2 transition-all hover:scale-105"
+                className="w-full py-3.5 rounded-2xl bg-[#0ea5e9] hover:bg-sky-400 text-slate-950 font-black text-xs shadow-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
-                <span>{isLoading ? 'Verifying MongoDB...' : mode === 'login' ? 'Sign In to Dashboard' : 'Register Account (Redirect to Sign In)'}</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            </form>
-          </div>
-        </div>
-      </main>
-
-      {/* Forgot Password Modal */}
-      {showForgotModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="w-full max-w-sm rounded-3xl bg-slate-900 border border-slate-800 p-6 shadow-2xl space-y-4 animate-in fade-in">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <KeyRound className="w-5 h-5 text-sky-400" />
-                <h3 className="font-black text-base">Reset Your Password</h3>
-              </div>
-              <button
-                onClick={() => setShowForgotModal(false)}
-                className="text-slate-400 hover:text-white p-1"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <p className="text-xs text-slate-300 leading-relaxed">
-              Enter your email address and we'll send you a password reset link to access your account.
-            </p>
-
-            <form onSubmit={handleResetPassword} className="space-y-3">
-              <div>
-                <label className="block text-[11px] font-bold uppercase text-slate-400 mb-1">
-                  Your Email
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3.5 top-3 w-4 h-4 text-slate-400" />
-                  <input
-                    type="email"
-                    required
-                    value={resetEmail}
-                    onChange={(e) => setResetEmail(e.target.value)}
-                    placeholder="e.g. shanzy@gmail.com"
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white font-semibold text-xs outline-none focus:ring-2 focus:ring-sky-500"
-                  />
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={resetSent}
-                className="w-full py-3 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-black text-xs shadow-lg transition-all"
-              >
-                {resetSent ? 'Sending Reset Link...' : 'Send Password Reset Email'}
+                {isLoading ? (
+                  <span>Connecting to MongoDB...</span>
+                ) : (
+                  <>
+                    <span>{mode === 'login' ? 'Sign In to Dashboard' : 'Register Account'}</span>
+                    <ArrowRight className="w-4 h-4 stroke-[3]" />
+                  </>
+                )}
               </button>
             </form>
           </div>
         </div>
       )}
 
-      {/* Footer */}
-      <footer className="relative z-10 max-w-7xl mx-auto w-full px-6 py-4 text-center text-xs text-slate-400 border-t border-slate-900 flex flex-col sm:flex-row items-center justify-between gap-2">
-        <span>TradePro 360 &bull; WEIC Smart Trade Solutions UK &bull; MongoDB Atlas Connected</span>
-        <span className="flex items-center gap-1 text-emerald-400 font-bold">
-          <ShieldCheck className="w-3.5 h-3.5" /> 256-Bit SSL Secured
-        </span>
+      {/* FOOTER */}
+      <footer className="relative z-10 border-t border-[#1e293b] py-6 px-6 text-center text-xs text-slate-500 font-medium">
+        <span>&copy; 2026 TradePro 360 — AI-Powered Smart Booking & Dispatch Platform. All rights reserved.</span>
       </footer>
     </div>
   );
