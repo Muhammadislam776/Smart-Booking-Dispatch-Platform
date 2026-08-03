@@ -20,6 +20,7 @@ import {
   RefreshCw,
   Lock,
   X,
+  Edit3,
 } from 'lucide-react';
 
 interface SuperAdminMerchantsPageProps {
@@ -31,15 +32,18 @@ export default function SuperAdminMerchantsPage({ isDark = true }: SuperAdminMer
   const [filterTier, setFilterTier] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingMerchant, setEditingMerchant] = useState<any | null>(null);
+
   const [isLoading, setIsLoading] = useState(false);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
 
-  // New Merchant Form state
-  const [newMerchantName, setNewMerchantName] = useState('');
-  const [newMerchantTier, setNewMerchantTier] = useState('Enterprise (£499/mo)');
-  const [newMerchantPostcode, setNewMerchantPostcode] = useState('');
-  const [newMerchantRevenue, setNewMerchantRevenue] = useState('15000');
-  const [newMerchantEngineers, setNewMerchantEngineers] = useState('5');
+  // Merchant Form state
+  const [merchantName, setMerchantName] = useState('');
+  const [merchantTier, setMerchantTier] = useState('Enterprise (£499/mo)');
+  const [merchantPostcode, setMerchantPostcode] = useState('');
+  const [merchantRevenue, setMerchantRevenue] = useState('15000');
+  const [merchantEngineers, setMerchantEngineers] = useState('5');
 
   const [merchantsList, setMerchantsList] = useState<any[]>([]);
 
@@ -90,33 +94,89 @@ export default function SuperAdminMerchantsPage({ isDark = true }: SuperAdminMer
   // Add new merchant to MongoDB Atlas
   const handleCreateMerchant = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMerchantName || !newMerchantPostcode) return;
+    if (!merchantName || !merchantPostcode) return;
 
     try {
       const res = await fetch('/api/merchants', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: newMerchantName,
-          tier: newMerchantTier,
-          postcode: newMerchantPostcode,
-          monthlyRevenue: newMerchantRevenue,
-          engineersCount: newMerchantEngineers,
+          name: merchantName,
+          tier: merchantTier,
+          postcode: merchantPostcode,
+          monthlyRevenue: merchantRevenue,
+          engineersCount: merchantEngineers,
         }),
       });
 
       const data = await res.json();
       if (data.success && data.merchant) {
         setMerchantsList([data.merchant, ...merchantsList]);
-        showToast(`Merchant "${newMerchantName}" saved to MongoDB Atlas!`);
+        showToast(`Merchant "${merchantName}" saved to MongoDB Atlas!`);
       }
     } catch (e) {
       console.error('Save failed:', e);
     } finally {
       setShowAddModal(false);
-      setNewMerchantName('');
-      setNewMerchantPostcode('');
+      setMerchantName('');
+      setMerchantPostcode('');
     }
+  };
+
+  // Edit merchant details in MongoDB Atlas
+  const handleEditMerchantSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingMerchant) return;
+
+    const rev = parseFloat(merchantRevenue) || 15000;
+    const comm = rev * 0.125;
+
+    setMerchantsList(
+      merchantsList.map((m) =>
+        m.id === editingMerchant.id
+          ? {
+              ...m,
+              name: merchantName,
+              tier: merchantTier,
+              postcode: merchantPostcode,
+              monthlyRevenue: rev,
+              commissionCollected: comm,
+              engineersCount: parseInt(merchantEngineers) || 5,
+            }
+          : m
+      )
+    );
+
+    showToast(`Merchant "${merchantName}" parameters updated in MongoDB Atlas!`);
+    setShowEditModal(false);
+
+    try {
+      await fetch('/api/merchants', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: editingMerchant.id,
+          name: merchantName,
+          tier: merchantTier,
+          postcode: merchantPostcode,
+          monthlyRevenue: rev,
+          commissionCollected: comm,
+          engineersCount: parseInt(merchantEngineers) || 5,
+        }),
+      });
+    } catch (e) {
+      console.error('Update merchant failed:', e);
+    }
+  };
+
+  const openEditModal = (m: any) => {
+    setEditingMerchant(m);
+    setMerchantName(m.name);
+    setMerchantTier(m.tier);
+    setMerchantPostcode(m.postcode);
+    setMerchantRevenue((m.monthlyRevenue || 15000).toString());
+    setMerchantEngineers((m.engineersCount || 5).toString());
+    setShowEditModal(true);
   };
 
   const filteredMerchants = merchantsList.filter((m) => {
@@ -164,7 +224,11 @@ export default function SuperAdminMerchantsPage({ isDark = true }: SuperAdminMer
           </button>
 
           <button
-            onClick={() => setShowAddModal(true)}
+            onClick={() => {
+              setMerchantName('');
+              setMerchantPostcode('');
+              setShowAddModal(true);
+            }}
             className="px-4 py-2.5 bg-[#0ea5e9] hover:bg-sky-400 text-slate-950 font-black rounded-xl text-xs flex items-center gap-1.5 shadow-lg shadow-sky-500/20 transition-all hover:scale-105"
           >
             <Plus className="w-4 h-4 stroke-[3]" /> Add New Merchant
@@ -247,7 +311,7 @@ export default function SuperAdminMerchantsPage({ isDark = true }: SuperAdminMer
                 <div>
                   <h3 className="font-black text-sm text-white">{m.name}</h3>
                   <span className="text-[10px] font-mono text-slate-400">
-                    Postcode: {m.postcode} &bull; Joined {m.joinedDate}
+                    Postcode: {m.postcode} &bull; Joined {m.joinedDate || '2026'}
                   </span>
                 </div>
               </div>
@@ -292,10 +356,17 @@ export default function SuperAdminMerchantsPage({ isDark = true }: SuperAdminMer
 
             <div className="flex items-center justify-between pt-2 border-t border-[#1e293b] text-xs">
               <span className="text-slate-400 text-[11px] font-bold">
-                Engineers Roster: <span className="text-white font-mono">{m.engineersCount} Active</span>
+                Engineers Roster: <span className="text-white font-mono">{m.engineersCount || 4} Active</span>
               </span>
 
               <div className="flex items-center gap-2">
+                <button
+                  onClick={() => openEditModal(m)}
+                  className="px-3 py-1.5 rounded-xl font-black text-[11px] bg-[#0b0e14] border border-[#1e293b] text-sky-400 hover:text-white transition-all flex items-center gap-1"
+                >
+                  <Edit3 className="w-3.5 h-3.5" /> Edit
+                </button>
+
                 <button
                   onClick={() => handleToggleStatus(m.id, m.status)}
                   className={`px-3 py-1.5 rounded-xl font-black text-[11px] transition-all ${
@@ -312,7 +383,7 @@ export default function SuperAdminMerchantsPage({ isDark = true }: SuperAdminMer
         ))}
       </div>
 
-      {/* ADD NEW MERCHANT MODAL DRAWER */}
+      {/* MODAL 1: ADD NEW MERCHANT MODAL */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
           <form
@@ -339,8 +410,8 @@ export default function SuperAdminMerchantsPage({ isDark = true }: SuperAdminMer
                 <input
                   type="text"
                   placeholder="e.g. Bristol Plumbing & Boiler Experts"
-                  value={newMerchantName}
-                  onChange={(e) => setNewMerchantName(e.target.value)}
+                  value={merchantName}
+                  onChange={(e) => setMerchantName(e.target.value)}
                   required
                   className="w-full px-4 py-2.5 rounded-xl bg-[#0b0e14] border border-[#1e293b] text-white text-xs font-semibold outline-none focus:border-sky-500"
                 />
@@ -351,8 +422,8 @@ export default function SuperAdminMerchantsPage({ isDark = true }: SuperAdminMer
                 <input
                   type="text"
                   placeholder="e.g. BS1 4DJ"
-                  value={newMerchantPostcode}
-                  onChange={(e) => setNewMerchantPostcode(e.target.value)}
+                  value={merchantPostcode}
+                  onChange={(e) => setMerchantPostcode(e.target.value)}
                   required
                   className="w-full px-4 py-2.5 rounded-xl bg-[#0b0e14] border border-[#1e293b] text-white text-xs font-semibold outline-none focus:border-sky-500"
                 />
@@ -361,8 +432,8 @@ export default function SuperAdminMerchantsPage({ isDark = true }: SuperAdminMer
               <div className="space-y-1">
                 <label className="block text-xs font-bold text-slate-300">SaaS Subscription Tier</label>
                 <select
-                  value={newMerchantTier}
-                  onChange={(e) => setNewMerchantTier(e.target.value)}
+                  value={merchantTier}
+                  onChange={(e) => setMerchantTier(e.target.value)}
                   className="w-full px-4 py-2.5 rounded-xl bg-[#0b0e14] border border-[#1e293b] text-white text-xs font-semibold outline-none focus:border-sky-500"
                 >
                   <option value="Enterprise (£499/mo)">Enterprise Tier (£499/mo)</option>
@@ -376,8 +447,8 @@ export default function SuperAdminMerchantsPage({ isDark = true }: SuperAdminMer
                   <label className="block text-xs font-bold text-slate-300">Est. Monthly Revenue (£)</label>
                   <input
                     type="number"
-                    value={newMerchantRevenue}
-                    onChange={(e) => setNewMerchantRevenue(e.target.value)}
+                    value={merchantRevenue}
+                    onChange={(e) => setMerchantRevenue(e.target.value)}
                     className="w-full px-4 py-2.5 rounded-xl bg-[#0b0e14] border border-[#1e293b] text-white text-xs font-semibold outline-none focus:border-sky-500"
                   />
                 </div>
@@ -386,8 +457,8 @@ export default function SuperAdminMerchantsPage({ isDark = true }: SuperAdminMer
                   <label className="block text-xs font-bold text-slate-300">Engineers Count</label>
                   <input
                     type="number"
-                    value={newMerchantEngineers}
-                    onChange={(e) => setNewMerchantEngineers(e.target.value)}
+                    value={merchantEngineers}
+                    onChange={(e) => setMerchantEngineers(e.target.value)}
                     className="w-full px-4 py-2.5 rounded-xl bg-[#0b0e14] border border-[#1e293b] text-white text-xs font-semibold outline-none focus:border-sky-500"
                   />
                 </div>
@@ -407,6 +478,105 @@ export default function SuperAdminMerchantsPage({ isDark = true }: SuperAdminMer
                 className="flex-1 py-2.5 rounded-xl bg-[#0ea5e9] hover:bg-sky-400 text-slate-950 font-black text-xs shadow-lg"
               >
                 Save to MongoDB Atlas
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* MODAL 2: EDIT MERCHANT PARAMETERS MODAL */}
+      {showEditModal && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+          <form
+            onSubmit={handleEditMerchantSubmit}
+            className="w-full max-w-md bg-[#121824] border border-[#1e293b] rounded-3xl p-6 shadow-2xl space-y-4 animate-in fade-in"
+          >
+            <div className="flex items-center justify-between border-b border-[#1e293b] pb-3">
+              <div className="flex items-center gap-2">
+                <Edit3 className="w-5 h-5 text-sky-400" />
+                <h3 className="font-black text-base text-white">Edit Merchant Parameters</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowEditModal(false)}
+                className="p-1 text-slate-400 hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <label className="block text-xs font-bold text-slate-300">Company / Business Name</label>
+                <input
+                  type="text"
+                  value={merchantName}
+                  onChange={(e) => setMerchantName(e.target.value)}
+                  required
+                  className="w-full px-4 py-2.5 rounded-xl bg-[#0b0e14] border border-[#1e293b] text-white text-xs font-semibold outline-none focus:border-sky-500"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="block text-xs font-bold text-slate-300">UK Postcode</label>
+                <input
+                  type="text"
+                  value={merchantPostcode}
+                  onChange={(e) => setMerchantPostcode(e.target.value)}
+                  required
+                  className="w-full px-4 py-2.5 rounded-xl bg-[#0b0e14] border border-[#1e293b] text-white text-xs font-semibold outline-none focus:border-sky-500"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="block text-xs font-bold text-slate-300">SaaS Subscription Tier</label>
+                <select
+                  value={merchantTier}
+                  onChange={(e) => setMerchantTier(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl bg-[#0b0e14] border border-[#1e293b] text-white text-xs font-semibold outline-none focus:border-sky-500"
+                >
+                  <option value="Enterprise (£499/mo)">Enterprise Tier (£499/mo)</option>
+                  <option value="Pro (£199/mo)">Pro Tier (£199/mo)</option>
+                  <option value="Starter (£99/mo)">Starter Tier (£99/mo)</option>
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <label className="block text-xs font-bold text-slate-300">Monthly Revenue (£)</label>
+                  <input
+                    type="number"
+                    value={merchantRevenue}
+                    onChange={(e) => setMerchantRevenue(e.target.value)}
+                    className="w-full px-4 py-2.5 rounded-xl bg-[#0b0e14] border border-[#1e293b] text-white text-xs font-semibold outline-none focus:border-sky-500"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block text-xs font-bold text-slate-300">Engineers Count</label>
+                  <input
+                    type="number"
+                    value={merchantEngineers}
+                    onChange={(e) => setMerchantEngineers(e.target.value)}
+                    className="w-full px-4 py-2.5 rounded-xl bg-[#0b0e14] border border-[#1e293b] text-white text-xs font-semibold outline-none focus:border-sky-500"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowEditModal(false)}
+                className="flex-1 py-2.5 rounded-xl bg-[#0b0e14] text-slate-400 hover:text-white border border-[#1e293b] font-bold text-xs"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="flex-1 py-2.5 rounded-xl bg-[#0ea5e9] hover:bg-sky-400 text-slate-950 font-black text-xs shadow-lg"
+              >
+                Update in MongoDB Atlas
               </button>
             </div>
           </form>

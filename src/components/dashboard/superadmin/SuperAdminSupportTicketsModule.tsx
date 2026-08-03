@@ -18,6 +18,19 @@ export default function SuperAdminSupportTicketsModule() {
   const [tickets, setTickets] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Modal
+  const [showCreateModal, setShowCreateModal] = useState(false);
+
+  // Form State
+  const [ticketSubject, setTicketSubject] = useState('');
+  const [ticketCustomer, setTicketCustomer] = useState('London Heating & Gas Co.');
+  const [ticketPriority, setTicketPriority] = useState<'HIGH' | 'MEDIUM' | 'LOW'>('HIGH');
+
+  const showToast = (msg: string) => {
+    setToastMsg(msg);
+    setTimeout(() => setToastMsg(null), 3500);
+  };
+
   const fetchTicketsFromMongoDB = async () => {
     setIsLoading(true);
     try {
@@ -37,9 +50,34 @@ export default function SuperAdminSupportTicketsModule() {
     fetchTicketsFromMongoDB();
   }, []);
 
-  const showToast = (msg: string) => {
-    setToastMsg(msg);
-    setTimeout(() => setToastMsg(null), 3500);
+  const handleCreateTicket = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!ticketSubject) return;
+
+    try {
+      const res = await fetch('/api/support-tickets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          subject: ticketSubject,
+          customer: ticketCustomer,
+          priority: ticketPriority,
+          status: 'Open',
+          assignedTo: 'Super Admin',
+        }),
+      });
+
+      const data = await res.json();
+      if (data.success && data.ticket) {
+        setTickets([data.ticket, ...tickets]);
+        showToast(`Support Ticket #${data.ticket.id} created & saved to MongoDB Atlas!`);
+      }
+    } catch (e) {
+      console.error('Create ticket failed:', e);
+    } finally {
+      setShowCreateModal(false);
+      setTicketSubject('');
+    }
   };
 
   const handleResolveTicket = async (id: string) => {
@@ -91,7 +129,10 @@ export default function SuperAdminSupportTicketsModule() {
           </button>
 
           <button
-            onClick={() => showToast('New Ticket Created!')}
+            onClick={() => {
+              setTicketSubject('');
+              setShowCreateModal(true);
+            }}
             className="px-4 py-2.5 bg-[#0ea5e9] hover:bg-sky-400 text-slate-950 font-black rounded-xl text-xs flex items-center gap-1.5 shadow-lg shadow-sky-500/20"
           >
             <Plus className="w-4 h-4 stroke-[3]" /> Create Support Ticket
@@ -151,6 +192,80 @@ export default function SuperAdminSupportTicketsModule() {
           </tbody>
         </table>
       </div>
+
+      {/* MODAL: CREATE SUPPORT TICKET */}
+      {showCreateModal && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+          <form
+            onSubmit={handleCreateTicket}
+            className="w-full max-w-md bg-[#121824] border border-[#1e293b] rounded-3xl p-6 shadow-2xl space-y-4 animate-in fade-in"
+          >
+            <div className="flex items-center justify-between border-b border-[#1e293b] pb-3">
+              <div className="flex items-center gap-2">
+                <LifeBuoy className="w-5 h-5 text-sky-400" />
+                <h3 className="font-black text-base text-white">Create Support Ticket</h3>
+              </div>
+              <button type="button" onClick={() => setShowCreateModal(false)} className="p-1 text-slate-400 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div>
+                <label className="block text-slate-300 font-bold mb-1">Ticket Subject / Complaint</label>
+                <input
+                  type="text"
+                  required
+                  value={ticketSubject}
+                  onChange={(e) => setTicketSubject(e.target.value)}
+                  placeholder="e.g. Stripe Account Verification Pending"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#0b0e14] border border-[#1e293b] text-white font-semibold outline-none focus:border-sky-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-300 font-bold mb-1">Merchant / Customer Name</label>
+                <input
+                  type="text"
+                  required
+                  value={ticketCustomer}
+                  onChange={(e) => setTicketCustomer(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#0b0e14] border border-[#1e293b] text-white font-semibold outline-none focus:border-sky-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-300 font-bold mb-1">Priority Level</label>
+                <select
+                  value={ticketPriority}
+                  onChange={(e: any) => setTicketPriority(e.target.value)}
+                  className="w-full px-3 py-2.5 rounded-xl bg-[#0b0e14] border border-[#1e293b] text-white font-bold outline-none focus:border-sky-500"
+                >
+                  <option value="HIGH">HIGH Priority</option>
+                  <option value="MEDIUM">MEDIUM Priority</option>
+                  <option value="LOW">LOW Priority</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowCreateModal(false)}
+                className="flex-1 py-2.5 rounded-xl bg-[#0b0e14] text-slate-400 border border-[#1e293b] font-bold text-xs"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="flex-1 py-2.5 rounded-xl bg-[#0ea5e9] hover:bg-sky-400 text-slate-950 font-black text-xs shadow-lg"
+              >
+                Save to MongoDB Atlas
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
     </div>
   );
 }
