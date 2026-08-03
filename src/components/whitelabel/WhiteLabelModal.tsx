@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Business } from '@/types';
-import { X, SlidersHorizontal, Image, Palette, Check } from 'lucide-react';
+import { X, SlidersHorizontal, Image, Check } from 'lucide-react';
 
 interface WhiteLabelModalProps {
   business: Business;
@@ -17,27 +17,27 @@ export default function WhiteLabelModal({
 }: WhiteLabelModalProps) {
   const [name, setName] = useState(business.name);
   const [logo, setLogo] = useState(business.logo);
-  const [primaryColor, setPrimaryColor] = useState(business.primaryColor || '#0ea5e9');
   const [phone, setPhone] = useState(business.phone);
   const [email, setEmail] = useState(business.email);
+
+  useEffect(() => {
+    // Remove any custom dynamic theme style overrides to restore pristine clean UI
+    const themeStyle = document.getElementById('dynamic-enterprise-theme');
+    if (themeStyle) {
+      themeStyle.remove();
+    }
+  }, []);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Dynamically inject white-label theme primary color into document.head
-    let themeStyle = document.getElementById('dynamic-enterprise-theme');
-    if (!themeStyle) {
-      themeStyle = document.createElement('style');
-      themeStyle.id = 'dynamic-enterprise-theme';
-      document.head.appendChild(themeStyle);
+    // Clean up dynamic style element completely
+    const themeStyle = document.getElementById('dynamic-enterprise-theme');
+    if (themeStyle) {
+      themeStyle.remove();
     }
-    themeStyle.innerHTML = `
-      .bg-\\[\\#0ea5e9\\], .bg-sky-600, .bg-sky-500 { background-color: ${primaryColor} !important; }
-      .text-sky-400, .text-sky-500, .text-sky-600 { color: ${primaryColor} !important; }
-      .border-sky-500, .border-sky-600 { border-color: ${primaryColor} !important; }
-    `;
 
-    onSaveBranding({ name, logo, primaryColor, phone, email });
+    onSaveBranding({ name, logo, phone, email });
 
     // Persist White-Label Branding to MongoDB Atlas
     try {
@@ -47,7 +47,6 @@ export default function WhiteLabelModal({
         body: JSON.stringify({
           id: business.id || 'biz_01',
           name,
-          primaryColor,
         }),
       });
     } catch (err) {
@@ -91,19 +90,6 @@ export default function WhiteLabelModal({
             />
           </div>
 
-          <div>
-            <label className="block uppercase tracking-wider mb-1 text-slate-400 text-[10px] font-bold">Primary Theme Color</label>
-            <div className="flex items-center gap-3">
-              <input
-                type="color"
-                value={primaryColor}
-                onChange={(e) => setPrimaryColor(e.target.value)}
-                className="w-10 h-10 rounded-xl cursor-pointer border border-[#1e293b] bg-transparent"
-              />
-              <span className="font-mono text-sky-400 font-bold">{primaryColor}</span>
-            </div>
-          </div>
-
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block uppercase tracking-wider mb-1 text-slate-400 text-[10px] font-bold">Support Phone</label>
@@ -129,7 +115,7 @@ export default function WhiteLabelModal({
             type="submit"
             className="w-full mt-4 py-3 rounded-xl bg-[#0ea5e9] hover:bg-sky-400 text-slate-950 font-black text-xs shadow-lg flex items-center justify-center gap-1.5 transition-all"
           >
-            <Check className="w-4 h-4" /> Save White-Label Settings (MongoDB Atlas & Dynamic Theme)
+            <Check className="w-4 h-4" /> Save White-Label Settings (MongoDB Atlas)
           </button>
         </form>
       </div>
