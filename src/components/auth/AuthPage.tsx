@@ -239,10 +239,10 @@ export default function AuthPage({ onLoginSuccess, onExploreDemo, isDark = true 
         </div>
       </header>
 
-      {/* MAIN LANDING BODY SECTIONS WITH GENEROUS SPACIOUS MARGINS */}
-      <main className="relative z-10 max-w-6xl mx-auto w-full px-4 pt-36 pb-24 space-y-48 sm:space-y-60 flex-1">
+      {/* MAIN LANDING BODY SECTIONS WITH BALANCED SPACIOUS MARGINS */}
+      <main className="relative z-10 max-w-6xl mx-auto w-full px-4 pt-24 pb-16 space-y-24 sm:space-y-32 flex-1">
         {/* 1. HERO SECTION (#home) */}
-        <section id="home" className="text-center space-y-8 max-w-4xl mx-auto pt-4 animate-slide-up scroll-mt-36">
+        <section id="home" className="text-center space-y-6 max-w-4xl mx-auto pt-2 animate-slide-up scroll-mt-24">
           <div className="inline-flex items-center gap-2 bg-[#0b0e14] border border-sky-500/30 text-sky-400 text-xs font-black px-4 py-1.5 rounded-full shadow-xl">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
             <span>WEIC SMART TRADE SOLUTIONS UK — Official SaaS Platform</span>
@@ -283,7 +283,7 @@ export default function AuthPage({ onLoginSuccess, onExploreDemo, isDark = true 
           </div>
 
           {/* ONE-CLICK ROLE PRESET CARDS */}
-          <div className="pt-10">
+          <div className="pt-8">
             <div className="rounded-3xl bg-[#121824]/90 border border-[#1e293b] p-6 shadow-2xl space-y-4 max-w-4xl mx-auto backdrop-blur-xl hover:border-sky-500/40 transition-all">
               <div className="flex items-center justify-between border-b border-[#1e293b] pb-3">
                 <span className="text-xs font-black uppercase text-sky-400 tracking-wider flex items-center gap-2">
@@ -378,8 +378,8 @@ export default function AuthPage({ onLoginSuccess, onExploreDemo, isDark = true 
         </section>
 
         {/* 2. HOW IT WORKS SECTION (#how-it-works) */}
-        <section id="how-it-works" className="space-y-12 scroll-mt-36 pt-20 sm:pt-28 border-t border-[#1e293b]/60 animate-slide-up">
-          <div className="text-center space-y-3">
+        <section id="how-it-works" className="space-y-8 scroll-mt-24 pt-12 sm:pt-16 border-t border-[#1e293b]/60 animate-slide-up">
+          <div className="text-center space-y-2">
             <span className="text-xs font-black uppercase text-sky-400 tracking-wider">AUTOMATED WORKFLOW</span>
             <h2 className="text-3xl sm:text-5xl font-black text-white">How TradePro 360 Works</h2>
             <p className="text-xs sm:text-sm text-slate-400 max-w-xl mx-auto">
@@ -387,7 +387,7 @@ export default function AuthPage({ onLoginSuccess, onExploreDemo, isDark = true 
             </p>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-10">
             {[
               { step: '01', title: 'Customer Booking', desc: 'Real-time booking wizard with postcode validation & instant price quotes.', icon: <UserCheck className="w-6 h-6 text-sky-400" /> },
               { step: '02', title: 'AI Smart Dispatch', desc: 'Nearest engineer matching, Gas Safe skill scoring, & route calculations.', icon: <Cpu className="w-6 h-6 text-indigo-400" /> },
@@ -396,15 +396,15 @@ export default function AuthPage({ onLoginSuccess, onExploreDemo, isDark = true 
             ].map((st, i) => (
               <div
                 key={i}
-                className="rounded-3xl bg-[#121824] border border-[#1e293b] p-6 space-y-4 shadow-xl hover:border-sky-500/50 transition-all hover:-translate-y-2 relative group"
+                className="rounded-[2rem] bg-gradient-to-b from-[#121824] to-[#0c1220] border border-[#1e293b] p-7 space-y-5 shadow-2xl hover:border-sky-500/60 transition-all hover:-translate-y-2.5 relative group cursor-pointer"
               >
                 <div className="flex items-center justify-between">
-                  <div className="p-3 rounded-2xl bg-[#0b0e14] border border-[#1e293b] shadow-md group-hover:scale-110 transition-transform">
+                  <div className="p-3.5 rounded-2xl bg-[#0b0e14] border border-[#1e293b] shadow-md group-hover:scale-110 transition-transform">
                     {st.icon}
                   </div>
                   <span className="text-2xl font-black text-slate-700 group-hover:text-sky-400 transition-colors font-mono">{st.step}</span>
                 </div>
-                <h3 className="font-black text-base text-white">{st.title}</h3>
+                <h3 className="font-black text-lg text-white">{st.title}</h3>
                 <p className="text-xs text-slate-400 leading-relaxed font-medium">{st.desc}</p>
               </div>
             ))}
@@ -412,8 +412,8 @@ export default function AuthPage({ onLoginSuccess, onExploreDemo, isDark = true 
         </section>
 
         {/* 3. IDEAS SECTION (#ideas - MATCHING REFERENCE SCREENSHOT) */}
-        <section id="ideas" className="space-y-12 scroll-mt-36 pt-20 sm:pt-28 border-t border-[#1e293b]/60 animate-slide-up">
-          <div className="text-center space-y-3">
+        <section id="ideas" className="space-y-8 scroll-mt-24 pt-12 sm:pt-16 border-t border-[#1e293b]/60 animate-slide-up">
+          <div className="text-center space-y-2">
             <span className="text-xs font-black uppercase text-amber-400 tracking-wider">CUTTING-EDGE MODULES</span>
             <h2 className="text-3xl sm:text-5xl font-black text-white">Institutional Features & Ideas</h2>
             <p className="text-xs sm:text-sm text-slate-400 max-w-xl mx-auto">
@@ -497,8 +497,8 @@ export default function AuthPage({ onLoginSuccess, onExploreDemo, isDark = true 
         </section>
 
         {/* 4. PLATFORM FEATURES SECTION (#features - MATCHING REFERENCE SCREENSHOT) */}
-        <section id="features" className="space-y-12 scroll-mt-36 pt-20 sm:pt-28 border-t border-[#1e293b]/60 animate-slide-up">
-          <div className="text-center space-y-3">
+        <section id="features" className="space-y-8 scroll-mt-24 pt-12 sm:pt-16 border-t border-[#1e293b]/60 animate-slide-up">
+          <div className="text-center space-y-2">
             <span className="text-xs font-black uppercase text-sky-400 tracking-wider">ENTERPRISE SUITE</span>
             <h2 className="text-3xl sm:text-5xl font-black text-white">Platform Features</h2>
             <p className="text-xs sm:text-sm text-slate-400 max-w-xl mx-auto">
@@ -506,7 +506,7 @@ export default function AuthPage({ onLoginSuccess, onExploreDemo, isDark = true 
             </p>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-10">
             {[
               { title: 'Secure & Reliable', desc: 'Enterprise-grade security with encrypted submissions and MongoDB Atlas database isolation.', icon: <Shield className="w-6 h-6 text-rose-400" />, glow: 'shadow-rose-500/20' },
               { title: 'Live Telemetry & GPS', desc: 'Real-time satellite GPS tracking with detailed route telemetry and automated arrival alerts.', icon: <MapPin className="w-6 h-6 text-emerald-400" />, glow: 'shadow-emerald-500/20' },
@@ -517,7 +517,7 @@ export default function AuthPage({ onLoginSuccess, onExploreDemo, isDark = true 
             ].map((ft, i) => (
               <div
                 key={i}
-                className="rounded-3xl bg-[#121824] border border-[#1e293b] p-6 space-y-4 shadow-xl hover:border-sky-500/50 transition-all hover:-translate-y-2 relative group"
+                className="rounded-[2rem] bg-gradient-to-b from-[#121824] to-[#0c1220] border border-[#1e293b] p-7 space-y-4 shadow-2xl hover:border-sky-500/60 transition-all hover:-translate-y-2.5 relative group cursor-pointer"
               >
                 <div className={`w-12 h-12 rounded-2xl bg-[#0b0e14] border border-[#1e293b] flex items-center justify-center shadow-lg ${ft.glow} group-hover:scale-110 transition-transform`}>
                   {ft.icon}
@@ -530,8 +530,8 @@ export default function AuthPage({ onLoginSuccess, onExploreDemo, isDark = true 
         </section>
 
         {/* 5. RESOURCES SECTION (#resources) */}
-        <section id="resources" className="space-y-12 scroll-mt-36 pt-20 sm:pt-28 border-t border-[#1e293b]/60 animate-slide-up">
-          <div className="text-center space-y-3">
+        <section id="resources" className="space-y-8 scroll-mt-24 pt-12 sm:pt-16 border-t border-[#1e293b]/60 animate-slide-up">
+          <div className="text-center space-y-2">
             <span className="text-xs font-black uppercase text-emerald-400 tracking-wider">CERTIFICATIONS & STANDARDS</span>
             <h2 className="text-3xl sm:text-5xl font-black text-white">UK Trade Standards & Compliance</h2>
             <p className="text-xs sm:text-sm text-slate-400 max-w-xl mx-auto">
@@ -539,9 +539,9 @@ export default function AuthPage({ onLoginSuccess, onExploreDemo, isDark = true 
             </p>
           </div>
 
-          <div className="grid sm:grid-cols-3 gap-6">
-            <div className="rounded-3xl bg-[#121824] border border-[#1e293b] p-6 space-y-3 shadow-xl hover:border-emerald-500/50 transition-all hover:-translate-y-1.5">
-              <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-black uppercase">
+          <div className="grid sm:grid-cols-3 gap-8 sm:gap-10">
+            <div className="rounded-[2rem] bg-gradient-to-b from-[#121824] to-[#0c1220] border border-[#1e293b] p-7 space-y-4 shadow-2xl hover:border-emerald-500/60 transition-all hover:-translate-y-2.5 cursor-pointer">
+              <span className="px-3.5 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-black uppercase">
                 GAS SAFE REGISTERED
               </span>
               <h3 className="text-lg font-black text-white">CP12 Gas Safety Certificates</h3>
@@ -550,8 +550,8 @@ export default function AuthPage({ onLoginSuccess, onExploreDemo, isDark = true 
               </p>
             </div>
 
-            <div className="rounded-3xl bg-[#121824] border border-[#1e293b] p-6 space-y-3 shadow-xl hover:border-sky-500/50 transition-all hover:-translate-y-1.5">
-              <span className="px-3 py-1 rounded-full bg-sky-500/20 text-sky-400 border border-sky-500/30 text-[10px] font-black uppercase">
+            <div className="rounded-[2rem] bg-gradient-to-b from-[#121824] to-[#0c1220] border border-[#1e293b] p-7 space-y-4 shadow-2xl hover:border-sky-500/60 transition-all hover:-translate-y-2.5 cursor-pointer">
+              <span className="px-3.5 py-1 rounded-full bg-sky-500/20 text-sky-400 border border-sky-500/30 text-[10px] font-black uppercase">
                 ELECTRICAL 18TH EDITION
               </span>
               <h3 className="text-lg font-black text-white">EICR Electrical Inspection Reports</h3>
@@ -560,8 +560,8 @@ export default function AuthPage({ onLoginSuccess, onExploreDemo, isDark = true 
               </p>
             </div>
 
-            <div className="rounded-3xl bg-[#121824] border border-[#1e293b] p-6 space-y-3 shadow-xl hover:border-purple-500/50 transition-all hover:-translate-y-1.5">
-              <span className="px-3 py-1 rounded-full bg-purple-500/20 text-purple-400 border border-purple-500/30 text-[10px] font-black uppercase">
+            <div className="rounded-[2rem] bg-gradient-to-b from-[#121824] to-[#0c1220] border border-[#1e293b] p-7 space-y-4 shadow-2xl hover:border-purple-500/60 transition-all hover:-translate-y-2.5 cursor-pointer">
+              <span className="px-3.5 py-1 rounded-full bg-purple-500/20 text-purple-400 border border-purple-500/30 text-[10px] font-black uppercase">
                 PLUMBING & HVAC
               </span>
               <h3 className="text-lg font-black text-white">Boiler Performance Audit</h3>
@@ -573,8 +573,8 @@ export default function AuthPage({ onLoginSuccess, onExploreDemo, isDark = true 
         </section>
 
         {/* 6. DEVELOPER TEAM SECTION (#team - MATCHING REFERENCE SCREENSHOT) */}
-        <section id="team" className="space-y-12 scroll-mt-36 pt-20 sm:pt-28 border-t border-[#1e293b]/60 animate-slide-up">
-          <div className="text-center space-y-3">
+        <section id="team" className="space-y-8 scroll-mt-24 pt-12 sm:pt-16 border-t border-[#1e293b]/60 animate-slide-up">
+          <div className="text-center space-y-2">
             <span className="text-xs font-black uppercase text-purple-400 tracking-wider">ENGINEERING EXCELLENCE</span>
             <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight">Meet Our Developer & AI Team</h2>
             <p className="text-xs sm:text-sm text-slate-400 max-w-xl mx-auto">
@@ -646,8 +646,8 @@ export default function AuthPage({ onLoginSuccess, onExploreDemo, isDark = true 
         </section>
 
         {/* 7. CONTACT & HELP SECTION (#contact - MATCHING REFERENCE SCREENSHOT) */}
-        <section id="contact" className="space-y-12 scroll-mt-36 pt-20 sm:pt-28 border-t border-[#1e293b]/60 animate-slide-up">
-          <div className="text-center space-y-3">
+        <section id="contact" className="space-y-8 scroll-mt-24 pt-12 sm:pt-16 border-t border-[#1e293b]/60 animate-slide-up">
+          <div className="text-center space-y-2">
             <div className="inline-flex items-center gap-2 bg-sky-500/10 border border-sky-500/30 text-sky-400 text-xs font-black px-4 py-1.5 rounded-full shadow-inner">
               <Mail className="w-4 h-4" /> Get In Touch
             </div>
