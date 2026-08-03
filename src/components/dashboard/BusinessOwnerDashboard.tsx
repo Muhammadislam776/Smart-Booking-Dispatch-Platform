@@ -183,9 +183,16 @@ export default function BusinessOwnerDashboard({
     setShowEditServiceModal(true);
   };
 
+  // PDF Generator & Direct Download Trigger
   const handleDownloadPDF = (inv: Invoice) => {
-    generateInvoicePDF(inv, business);
-    showToast(`PDF Invoice #${inv.invoiceNumber} generated & downloaded!`);
+    try {
+      const doc = generateInvoicePDF(inv, business);
+      doc.save(`Invoice_${inv.invoiceNumber}.pdf`);
+      showToast(`PDF Invoice #${inv.invoiceNumber} downloaded successfully!`);
+    } catch (e) {
+      console.error('PDF generation error:', e);
+      showToast('Error generating PDF.');
+    }
   };
 
   const cardBgClass = isDark
@@ -211,11 +218,17 @@ export default function BusinessOwnerDashboard({
         }`}
       >
         <div className="flex items-center gap-4">
-          <img
-            src={business.logo}
-            alt={business.name}
-            className="w-16 h-16 rounded-2xl object-cover border-2 border-sky-400 shadow-lg bg-white"
-          />
+          {business.logo ? (
+            <img
+              src={business.logo}
+              alt={business.name}
+              className="w-16 h-16 rounded-2xl object-cover border-2 border-sky-400 shadow-lg bg-white shrink-0"
+            />
+          ) : (
+            <div className="w-16 h-16 rounded-2xl bg-sky-500/20 text-sky-400 border-2 border-sky-400 flex items-center justify-center font-black text-xl shrink-0">
+              {business.name.substring(0, 2).toUpperCase()}
+            </div>
+          )}
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-2xl font-black tracking-tight">{business.name}</h1>
@@ -234,7 +247,7 @@ export default function BusinessOwnerDashboard({
             onClick={onOpenWhiteLabel}
             className="px-4 py-2.5 bg-[#0ea5e9] hover:bg-sky-400 text-slate-950 font-black rounded-xl text-xs flex items-center gap-2 shadow-lg transition-all hover:scale-105"
           >
-            <SlidersHorizontal className="w-4 h-4" /> White-Label Settings
+            <SlidersHorizontal className="w-4 h-4" /> Settings
           </button>
         </div>
       </div>
