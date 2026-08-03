@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   ShieldCheck,
   History,
@@ -11,15 +11,31 @@ import {
   User,
   Activity,
   Terminal,
+  RefreshCw,
 } from 'lucide-react';
 
 export default function SuperAdminAuditLogsModule() {
-  const [logs, setLogs] = useState([
-    { id: 'log_1', action: 'MERCHANT_STATUS_UPDATE', actor: 'Super Admin (Sana Khan)', target: 'Yorkshire Emergency Locksmiths', details: 'Status set to Active in MongoDB Atlas', timestamp: '2026-08-03 18:35:10', ip: '192.168.1.42' },
-    { id: 'log_2', action: 'STRIPE_PAYMENT_CAPTURED', actor: 'Stripe Webhook Gateway', target: 'Invoice #INV-2026-WEIC-081', details: 'Captured £180.00 via Stripe Connect', timestamp: '2026-08-03 17:12:05', ip: '54.187.205.12' },
-    { id: 'log_3', action: 'ENGINEER_DISPATCHED', actor: 'Dispatcher (John Smith)', target: 'Booking #TF-99281-UK', details: 'Dispatched Alex Sterling (ETA: 18 Mins)', timestamp: '2026-08-03 16:40:22', ip: '192.168.1.18' },
-    { id: 'log_4', action: 'USER_ROLE_CHANGED', actor: 'Super Admin', target: 'david@weic.co.uk', details: 'Role set to Lead Field Engineer', timestamp: '2026-08-03 14:05:00', ip: '192.168.1.42' },
-  ]);
+  const [logs, setLogs] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const fetchLogsFromMongoDB = async () => {
+    setIsLoading(true);
+    try {
+      const res = await fetch('/api/audit-logs');
+      const data = await res.json();
+      if (data.success && data.logs) {
+        setLogs(data.logs);
+      }
+    } catch (e) {
+      console.error('Error fetching audit logs:', e);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchLogsFromMongoDB();
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -32,8 +48,17 @@ export default function SuperAdminAuditLogsModule() {
               MongoDB Atlas Persisted
             </span>
           </h2>
-          <p className="text-xs text-slate-400 mt-0.5">Immutable audit trail of all platform logins, updates, deletions, and payments.</p>
+          <p className="text-xs text-slate-400 mt-0.5">
+            Immutable audit trail of all platform logins, updates, deletions, and payments.
+          </p>
         </div>
+
+        <button
+          onClick={fetchLogsFromMongoDB}
+          className="p-2.5 rounded-xl bg-[#121824] border border-[#1e293b] text-slate-300 hover:text-white transition-all flex items-center gap-2 text-xs font-bold"
+        >
+          <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} /> Refresh Atlas Logs
+        </button>
       </div>
 
       {/* Logs Table */}

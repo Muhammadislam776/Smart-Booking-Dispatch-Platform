@@ -19,8 +19,6 @@ async function main() {
       { id: 'biz_04', name: 'Yorkshire Emergency Locksmiths', tier: 'Starter (£99/mo)', status: 'suspended', monthlyRevenue: 6200, commissionCollected: 775.0, joinedDate: '2026-01-05', postcode: 'LS1 5HD', engineersCount: 2, stripeConnected: false, slaScore: '94.2%' }
     ]);
     console.log('✅ Seeded merchants collection!');
-  } else {
-    console.log(`ℹ️ merchants collection already has ${await merchantsCol.countDocuments()} documents.`);
   }
 
   // 2. Notifications Collection
@@ -33,8 +31,6 @@ async function main() {
       { id: 'notif_4', title: 'Gas Safe Compliance Verified', message: 'Annual Gas Safe Audit passed 100% for London Heating & Gas Co.', timestamp: '12:00', read: true, type: 'system', roleTarget: 'all' }
     ]);
     console.log('✅ Seeded notifications collection!');
-  } else {
-    console.log(`ℹ️ notifications collection already has ${await notifsCol.countDocuments()} documents.`);
   }
 
   // 3. Invoices Collection
@@ -45,32 +41,29 @@ async function main() {
       { id: 'inv_2', invoiceNumber: 'INV-2026-WEIC-082', bookingId: 'b2', businessId: 'biz_01', customerId: 'c2', customerName: 'John Harrison', customerEmail: 'john@harrison.co.uk', customerAddress: '15 Deansgate, Manchester M1 1AE', issueDate: '2026-08-02', dueDate: '2026-08-16', items: [{ description: 'Full Consumer Unit Rewire', quantity: 1, unitPrice: 600.0, amount: 600.0 }], subtotal: 600.0, vatAmount: 120.0, totalAmount: 720.0, status: 'unpaid' }
     ]);
     console.log('✅ Seeded invoices collection!');
-  } else {
-    console.log(`ℹ️ invoices collection already has ${await invoicesCol.countDocuments()} documents.`);
   }
 
-  // 4. Engineers Collection
-  const engineersCol = db.collection('engineers');
-  if (await engineersCol.countDocuments() === 0) {
-    await engineersCol.insertMany([
-      { id: 'eng_1', businessId: 'biz_01', role: 'engineer', name: 'Alex Sterling', email: 'alex@weic.co.uk', phone: '+44 7911 123456', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=120', skills: ['Gas Safe', 'Boiler Systems'], certifications: ['Gas Safe Certified #592810'], vehicleRegistration: 'WEIC-882', isAvailable: false, currentLat: 51.5074, currentLng: -0.1278, rating: 4.98, completedJobsCount: 142 },
-      { id: 'eng_2', businessId: 'biz_01', role: 'engineer', name: 'David Gascoigne', email: 'david@weic.co.uk', phone: '+44 7890 123456', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=120', skills: ['NICEIC Electrical', 'EV Chargers'], certifications: ['NICEIC Approved Contractor'], vehicleRegistration: 'BD68 WXY', isAvailable: true, currentLat: 51.515, currentLng: -0.141, rating: 4.95, completedJobsCount: 98 }
+  // 4. Audit Logs Collection
+  const auditCol = db.collection('auditlogmodels');
+  if (await auditCol.countDocuments() === 0) {
+    await auditCol.insertMany([
+      { id: 'log_1', action: 'MERCHANT_STATUS_UPDATE', actor: 'Super Admin (Sana Khan)', target: 'Yorkshire Emergency Locksmiths', details: 'Status set to Active in MongoDB Atlas', ip: '192.168.1.42', timestamp: '2026-08-03 18:35:10' },
+      { id: 'log_2', action: 'STRIPE_PAYMENT_CAPTURED', actor: 'Stripe Webhook Gateway', target: 'Invoice #INV-2026-WEIC-081', details: 'Captured £180.00 via Stripe Connect', ip: '54.187.205.12', timestamp: '2026-08-03 17:12:05' },
+      { id: 'log_3', action: 'ENGINEER_DISPATCHED', actor: 'Dispatcher (John Smith)', target: 'Booking #TF-99281-UK', details: 'Dispatched Alex Sterling (ETA: 18 Mins)', ip: '192.168.1.18', timestamp: '2026-08-03 16:40:22' },
+      { id: 'log_4', action: 'USER_ROLE_CHANGED', actor: 'Super Admin', target: 'david@weic.co.uk', details: 'Role set to Lead Field Engineer', ip: '192.168.1.42', timestamp: '2026-08-03 14:05:00' }
     ]);
-    console.log('✅ Seeded engineers collection!');
-  } else {
-    console.log(`ℹ️ engineers collection already has ${await engineersCol.countDocuments()} documents.`);
+    console.log('✅ Seeded auditlogmodels collection!');
   }
 
-  // 5. Customers Collection
-  const customersCol = db.collection('customers');
-  if (await customersCol.countDocuments() === 0) {
-    await customersCol.insertMany([
-      { id: 'c1', businessId: 'biz_01', role: 'customer', name: 'Eleanor Vance', email: 'eleanor@vance.co.uk', phone: '+44 7700 900123', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=120', address: '42 Kensington High Street, London', postcode: 'W8 4PT', totalBookings: 3 },
-      { id: 'c2', businessId: 'biz_01', role: 'customer', name: 'John Harrison', email: 'john@harrison.co.uk', phone: '+44 7700 900456', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=120', address: '15 Deansgate, Manchester', postcode: 'M1 1AE', totalBookings: 1 }
+  // 5. Support Tickets Collection
+  const ticketsCol = db.collection('supportticketmodels');
+  if (await ticketsCol.countDocuments() === 0) {
+    await ticketsCol.insertMany([
+      { id: 'TK-9921', subject: 'Stripe Payout Bank Verification Delay', customer: 'London Heating & Gas Co.', priority: 'HIGH', status: 'Open', assignedTo: 'Super Admin', created: '2026-08-03 14:00' },
+      { id: 'TK-8812', subject: 'GPS Satellite Signal Intermittent in Leeds', customer: 'Yorkshire Locksmiths', priority: 'MEDIUM', status: 'In Progress', assignedTo: 'Tech Support', created: '2026-08-02 11:30' },
+      { id: 'TK-7740', subject: 'Custom PDF Invoice Logo Alignment Request', customer: 'Elite Plumbing Ltd', priority: 'LOW', status: 'Resolved', assignedTo: 'Design Team', created: '2026-08-01 09:15' }
     ]);
-    console.log('✅ Seeded customers collection!');
-  } else {
-    console.log(`ℹ️ customers collection already has ${await customersCol.countDocuments()} documents.`);
+    console.log('✅ Seeded supportticketmodels collection!');
   }
 
   const collections = await db.listCollections().toArray();

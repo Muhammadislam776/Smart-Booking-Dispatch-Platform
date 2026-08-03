@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   LifeBuoy,
   MessageSquare,
@@ -10,27 +10,53 @@ import {
   UserCheck,
   Plus,
   X,
+  RefreshCw,
 } from 'lucide-react';
 
 export default function SuperAdminSupportTicketsModule() {
   const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const [tickets, setTickets] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const [tickets, setTickets] = useState([
-    { id: 'TK-9921', subject: 'Stripe Payout Bank Verification Delay', customer: 'London Heating & Gas Co.', priority: 'HIGH', status: 'Open', assignedTo: 'Super Admin', created: '2026-08-03 14:00' },
-    { id: 'TK-8812', subject: 'GPS Satellite Signal Intermittent in Leeds', customer: 'Yorkshire Locksmiths', priority: 'MEDIUM', status: 'In Progress', assignedTo: 'Tech Support', created: '2026-08-02 11:30' },
-    { id: 'TK-7740', subject: 'Custom PDF Invoice Logo Alignment Request', customer: 'Elite Plumbing Ltd', priority: 'LOW', status: 'Resolved', assignedTo: 'Design Team', created: '2026-08-01 09:15' },
-  ]);
+  const fetchTicketsFromMongoDB = async () => {
+    setIsLoading(true);
+    try {
+      const res = await fetch('/api/support-tickets');
+      const data = await res.json();
+      if (data.success && data.tickets) {
+        setTickets(data.tickets);
+      }
+    } catch (e) {
+      console.error('Error fetching tickets:', e);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTicketsFromMongoDB();
+  }, []);
 
   const showToast = (msg: string) => {
     setToastMsg(msg);
     setTimeout(() => setToastMsg(null), 3500);
   };
 
-  const handleResolveTicket = (id: string) => {
+  const handleResolveTicket = async (id: string) => {
     setTickets(
       tickets.map((t) => (t.id === id ? { ...t, status: 'Resolved' } : t))
     );
-    showToast(`Ticket #${id} marked as RESOLVED! Notification sent to customer.`);
+    showToast(`Ticket #${id} marked as RESOLVED in MongoDB Atlas!`);
+
+    try {
+      await fetch('/api/support-tickets', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status: 'Resolved' }),
+      });
+    } catch (e) {
+      console.error('Ticket update failed:', e);
+    }
   };
 
   return (
@@ -45,16 +71,32 @@ export default function SuperAdminSupportTicketsModule() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-black text-white tracking-tight">Super Admin Support Center</h2>
-          <p className="text-xs text-slate-400 mt-0.5">Manage customer support tickets, assign engineers, and resolve complaints.</p>
+          <h2 className="text-2xl font-black text-white tracking-tight flex items-center gap-2">
+            Super Admin Support Center
+            <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-black uppercase">
+              MongoDB Atlas Live
+            </span>
+          </h2>
+          <p className="text-xs text-slate-400 mt-0.5">
+            Manage customer support tickets, assign engineers, and resolve complaints.
+          </p>
         </div>
 
-        <button
-          onClick={() => showToast('New Ticket Created!')}
-          className="px-4 py-2.5 bg-[#0ea5e9] hover:bg-sky-400 text-slate-950 font-black rounded-xl text-xs flex items-center gap-1.5 shadow-lg shadow-sky-500/20"
-        >
-          <Plus className="w-4 h-4 stroke-[3]" /> Create Support Ticket
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={fetchTicketsFromMongoDB}
+            className="p-2.5 rounded-xl bg-[#121824] border border-[#1e293b] text-slate-300 hover:text-white transition-all flex items-center gap-2 text-xs font-bold"
+          >
+            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} /> Refresh Atlas Tickets
+          </button>
+
+          <button
+            onClick={() => showToast('New Ticket Created!')}
+            className="px-4 py-2.5 bg-[#0ea5e9] hover:bg-sky-400 text-slate-950 font-black rounded-xl text-xs flex items-center gap-1.5 shadow-lg shadow-sky-500/20"
+          >
+            <Plus className="w-4 h-4 stroke-[3]" /> Create Support Ticket
+          </button>
+        </div>
       </div>
 
       {/* Tickets Table */}
@@ -77,16 +119,20 @@ export default function SuperAdminSupportTicketsModule() {
                 <td className="py-4 px-4 font-black text-white">{t.subject}</td>
                 <td className="py-4 px-4 text-slate-300 font-semibold">{t.customer}</td>
                 <td className="py-4 px-4">
-                  <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${
-                    t.priority === 'HIGH' ? 'bg-rose-500/20 text-rose-400' : 'bg-amber-500/20 text-amber-400'
-                  }`}>
+                  <span
+                    className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${
+                      t.priority === 'HIGH' ? 'bg-rose-500/20 text-rose-400' : 'bg-amber-500/20 text-amber-400'
+                    }`}
+                  >
                     {t.priority}
                   </span>
                 </td>
                 <td className="py-4 px-4">
-                  <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase ${
-                    t.status === 'Resolved' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-sky-500/20 text-sky-400'
-                  }`}>
+                  <span
+                    className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase ${
+                      t.status === 'Resolved' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-sky-500/20 text-sky-400'
+                    }`}
+                  >
                     {t.status}
                   </span>
                 </td>
