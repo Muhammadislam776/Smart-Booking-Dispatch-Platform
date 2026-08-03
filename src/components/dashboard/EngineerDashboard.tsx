@@ -432,6 +432,48 @@ export default function EngineerDashboard({
             </div>
           </div>
 
+          {/* PROMINENT JOB SCOPE & ISSUE DETAILS RECORD BOX */}
+          <div className="p-4.5 rounded-2xl bg-[#0b0e14] border border-[#1e293b] space-y-3">
+            <div className="flex items-center justify-between border-b border-[#1e293b] pb-2">
+              <span className="text-[10px] font-black uppercase text-sky-400 tracking-wider flex items-center gap-1.5">
+                <FileText className="w-3.5 h-3.5" /> JOB SCOPE & ISSUE DETAILS
+              </span>
+              <span
+                className={`px-2.5 py-0.5 rounded text-[10px] font-black uppercase ${
+                  activeJob.isEmergency ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' : 'bg-sky-500/20 text-sky-400 border border-sky-500/30'
+                }`}
+              >
+                {activeJob.isEmergency ? '🚨 EMERGENCY HIGH PRIORITY' : 'STANDARD PRIORITY'}
+              </span>
+            </div>
+
+            <div className="text-xs space-y-3">
+              <div>
+                <span className="font-bold text-white block mb-0.5">Reported Problem / Issue Description:</span>
+                <p className="text-slate-300 leading-relaxed bg-[#121824] p-3 rounded-xl border border-[#1e293b]">
+                  {activeJob.issueDescription || 'Emergency boiler performance audit, central heating pressure loss, and anti-snap lock cylinder replacement.'}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2 border-t border-[#1e293b] text-xs">
+                <div>
+                  <span className="text-[10px] text-slate-400 uppercase font-extrabold block">SCHEDULED TIME</span>
+                  <span className="font-bold text-slate-200">{activeJob.scheduledDate || 'Today'} @ {activeJob.scheduledTime || '14:30'}</span>
+                </div>
+
+                <div>
+                  <span className="text-[10px] text-slate-400 uppercase font-extrabold block">TOTAL BILLING PRICE</span>
+                  <span className="font-bold text-emerald-400 font-mono">£{(activeJob.pricing?.total || 180).toFixed(2)}</span>
+                </div>
+
+                <div>
+                  <span className="text-[10px] text-slate-400 uppercase font-extrabold block">DISPATCHER HQ</span>
+                  <span className="font-bold text-slate-200">SaaS AI Dispatcher</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div className="space-y-2">
             <label className="block text-[11px] font-black uppercase text-slate-400 tracking-wider">
               UPDATE JOB STATUS PROGRESS
