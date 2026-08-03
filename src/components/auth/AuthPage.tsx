@@ -255,65 +255,75 @@ export default function AuthPage({ onLoginSuccess, onExploreDemo, isDark = true 
             )}
 
             {/* Quick Demo Sign In Presets */}
-            <div>
-              <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider block mb-2">
-                Click to Pre-fill Seeded Accounts:
+            <div className="space-y-2">
+              <span className="text-[10px] font-black uppercase text-sky-400 tracking-wider block">
+                SELECT LOGIN ROLE PORTAL (ONE-CLICK PRE-FILL):
               </span>
-              <div className="grid grid-cols-2 gap-2 text-[11px]">
+              <div className="grid grid-cols-2 gap-2.5 text-[11px]">
+                {/* 1. Business Owner */}
                 <button
                   type="button"
                   onClick={() =>
                     handleSelectPreset({
                       email: 'sanajavaidkhan44@weic.co.uk',
-                      name: 'Sana Khan',
+                      name: 'Sana Khan (Business Owner)',
                       role: 'business_owner',
                     })
                   }
-                  className="p-2.5 rounded-xl bg-slate-950 hover:bg-slate-800/80 border border-slate-800 text-slate-200 font-bold text-left flex items-center gap-2 transition-all hover:scale-105"
+                  className="p-3 rounded-2xl bg-[#0b0e14] hover:bg-[#121824] border border-[#1e293b] hover:border-sky-500/60 text-slate-100 font-bold text-left flex items-center gap-2.5 transition-all hover:scale-102 shadow-lg group cursor-pointer"
                 >
-                  <Building2 className="w-4 h-4 text-sky-400 shrink-0" />
+                  <div className="w-8 h-8 rounded-xl bg-sky-500/20 text-sky-400 flex items-center justify-center border border-sky-500/30 group-hover:scale-110 transition-all shrink-0">
+                    <Building2 className="w-4 h-4" />
+                  </div>
                   <div className="truncate">
-                    <div className="font-extrabold truncate">Sana Khan</div>
-                    <div className="text-[9px] text-slate-400">WEIC Owner</div>
+                    <div className="font-black text-white text-xs truncate">Business Owner</div>
+                    <div className="text-[10px] text-sky-400 font-bold">Sana Khan</div>
                   </div>
                 </button>
 
+                {/* 2. Field Engineer */}
                 <button
                   type="button"
                   onClick={() =>
                     handleSelectPreset({
                       email: 'david.g@weic.co.uk',
-                      name: 'David Gascoigne',
+                      name: 'David Gascoigne (Engineer)',
                       role: 'engineer',
                     })
                   }
-                  className="p-2.5 rounded-xl bg-slate-950 hover:bg-slate-800/80 border border-slate-800 text-slate-200 font-bold text-left flex items-center gap-2 transition-all hover:scale-105"
+                  className="p-3 rounded-2xl bg-[#0b0e14] hover:bg-[#121824] border border-[#1e293b] hover:border-emerald-500/60 text-slate-100 font-bold text-left flex items-center gap-2.5 transition-all hover:scale-102 shadow-lg group cursor-pointer"
                 >
-                  <Wrench className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center border border-emerald-500/30 group-hover:scale-110 transition-all shrink-0">
+                    <Wrench className="w-4 h-4" />
+                  </div>
                   <div className="truncate">
-                    <div className="font-extrabold truncate">David Gascoigne</div>
-                    <div className="text-[9px] text-slate-400">Gas Engineer</div>
+                    <div className="font-black text-white text-xs truncate">Field Engineer</div>
+                    <div className="text-[10px] text-emerald-400 font-bold">David Gascoigne</div>
                   </div>
                 </button>
 
+                {/* 3. Customer */}
                 <button
                   type="button"
                   onClick={() =>
                     handleSelectPreset({
                       email: 'eleanor.vance@example.co.uk',
-                      name: 'Eleanor Vance',
+                      name: 'Eleanor Vance (Customer)',
                       role: 'customer',
                     })
                   }
-                  className="p-2.5 rounded-xl bg-slate-950 hover:bg-slate-800/80 border border-slate-800 text-slate-200 font-bold text-left flex items-center gap-2 transition-all hover:scale-105"
+                  className="p-3 rounded-2xl bg-[#0b0e14] hover:bg-[#121824] border border-[#1e293b] hover:border-purple-500/60 text-slate-100 font-bold text-left flex items-center gap-2.5 transition-all hover:scale-102 shadow-lg group cursor-pointer"
                 >
-                  <UserCheck className="w-4 h-4 text-purple-400 shrink-0" />
+                  <div className="w-8 h-8 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center border border-purple-500/30 group-hover:scale-110 transition-all shrink-0">
+                    <UserCheck className="w-4 h-4" />
+                  </div>
                   <div className="truncate">
-                    <div className="font-extrabold truncate">Eleanor Vance</div>
-                    <div className="text-[9px] text-slate-400">UK Customer</div>
+                    <div className="font-black text-white text-xs truncate">UK Customer</div>
+                    <div className="text-[10px] text-purple-400 font-bold">Eleanor Vance</div>
                   </div>
                 </button>
 
+                {/* 4. Super Admin */}
                 <button
                   type="button"
                   onClick={() =>
@@ -323,12 +333,14 @@ export default function AuthPage({ onLoginSuccess, onExploreDemo, isDark = true 
                       role: 'super_admin',
                     })
                   }
-                  className="p-2.5 rounded-xl bg-slate-950 hover:bg-slate-800/80 border border-slate-800 text-slate-200 font-bold text-left flex items-center gap-2 transition-all hover:scale-105"
+                  className="p-3 rounded-2xl bg-[#0b0e14] hover:bg-[#121824] border border-[#1e293b] hover:border-rose-500/60 text-slate-100 font-bold text-left flex items-center gap-2.5 transition-all hover:scale-102 shadow-lg group cursor-pointer"
                 >
-                  <ShieldCheck className="w-4 h-4 text-rose-400 shrink-0" />
+                  <div className="w-8 h-8 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center border border-rose-500/30 group-hover:scale-110 transition-all shrink-0">
+                    <ShieldCheck className="w-4 h-4" />
+                  </div>
                   <div className="truncate">
-                    <div className="font-extrabold truncate">Super Admin</div>
-                    <div className="text-[9px] text-slate-400">SaaS Admin</div>
+                    <div className="font-black text-white text-xs truncate">Super Admin</div>
+                    <div className="text-[10px] text-rose-400 font-bold">SaaS Admin HQ</div>
                   </div>
                 </button>
               </div>
