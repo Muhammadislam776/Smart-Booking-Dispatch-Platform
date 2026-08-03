@@ -177,68 +177,70 @@ export default function AuthPage({ onLoginSuccess, onExploreDemo, isDark = true 
       <div className="absolute bottom-1/4 right-10 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute inset-0 bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:32px_32px] opacity-10 pointer-events-none" />
 
-      {/* TOP STICKY NAVBAR HEADER (EXACTLY MATCHING SMART CLEARANCE NAVBAR) */}
-      <header className="sticky top-0 z-40 max-w-7xl mx-auto w-full px-6 py-4 flex items-center justify-between border-b border-[#1e293b]/70 backdrop-blur-xl bg-[#080b11]/90 shadow-2xl">
-        <div className="flex items-center gap-3 cursor-pointer" onClick={() => scrollToSection('home')}>
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-sky-500/30 ring-2 ring-sky-400/20">
-            <Wrench className="w-5 h-5" />
+      {/* FIXED ALWAYS-VISIBLE TOP NAVBAR HEADER */}
+      <header className="fixed top-0 left-0 right-0 z-50 w-full px-6 py-4 border-b border-[#1e293b]/90 backdrop-blur-2xl bg-[#080b11]/95 shadow-2xl shadow-slate-950/90 transition-all duration-300">
+        <div className="max-w-7xl mx-auto w-full flex items-center justify-between">
+          <div className="flex items-center gap-3 cursor-pointer group" onClick={() => scrollToSection('home')}>
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-sky-500/30 ring-2 ring-sky-400/20 group-hover:scale-110 transition-transform">
+              <Wrench className="w-5 h-5" />
+            </div>
+            <div>
+              <span className="font-black text-xl tracking-tight text-white">
+                TradePro <span className="text-sky-400">360</span>
+              </span>
+            </div>
           </div>
-          <div>
-            <span className="font-black text-xl tracking-tight text-white">
-              TradePro <span className="text-sky-400">360</span>
-            </span>
-          </div>
-        </div>
 
-        {/* Center Navigation Links with Active Pill Glow Indicator */}
-        <nav className="hidden md:flex items-center gap-2 text-xs font-bold">
-          {[
-            { id: 'how-it-works', label: 'How It Works' },
-            { id: 'ideas', label: 'Ideas' },
-            { id: 'features', label: 'Features' },
-            { id: 'resources', label: 'Resources' },
-            { id: 'team', label: 'Team' },
-            { id: 'contact', label: 'Contact' },
-          ].map((item) => (
+          {/* Center Navigation Links with Active Pill Glow Indicator */}
+          <nav className="hidden md:flex items-center gap-2 text-xs font-bold">
+            {[
+              { id: 'how-it-works', label: 'How It Works' },
+              { id: 'ideas', label: 'Ideas' },
+              { id: 'features', label: 'Features' },
+              { id: 'resources', label: 'Resources' },
+              { id: 'team', label: 'Team' },
+              { id: 'contact', label: 'Contact' },
+            ].map((item) => (
+              <button
+                key={item.id}
+                onClick={() => scrollToSection(item.id)}
+                className={`px-4 py-2 rounded-full transition-all duration-300 cursor-pointer ${
+                  activeNav === item.id
+                    ? 'bg-sky-500/20 text-sky-400 border border-sky-500/50 font-extrabold shadow-[0_0_20px_rgba(56,189,248,0.35)] scale-105'
+                    : 'text-slate-300 hover:text-white hover:bg-slate-900/80 hover:border-sky-500/30 border border-transparent'
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </nav>
+
+          {/* Right Header Action Buttons */}
+          <div className="flex items-center gap-3">
             <button
-              key={item.id}
-              onClick={() => scrollToSection(item.id)}
-              className={`px-4 py-2 rounded-full transition-all duration-300 ${
-                activeNav === item.id
-                  ? 'bg-sky-500/20 text-sky-400 border border-sky-500/40 font-extrabold shadow-[0_0_15px_rgba(56,189,248,0.25)]'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-900/60'
-              }`}
+              onClick={() => {
+                setMode('signup');
+                setShowAuthModal(true);
+              }}
+              className="px-5 py-2 rounded-full border border-sky-500/40 text-sky-300 hover:bg-sky-500/20 font-bold text-xs transition-all shadow-md cursor-pointer hover:scale-105 hover:border-sky-400"
             >
-              {item.label}
+              Register
             </button>
-          ))}
-        </nav>
-
-        {/* Right Header Action Buttons */}
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => {
-              setMode('signup');
-              setShowAuthModal(true);
-            }}
-            className="px-5 py-2 rounded-full border border-sky-500/40 text-sky-300 hover:bg-sky-500/10 font-bold text-xs transition-all shadow-md cursor-pointer hover:scale-105"
-          >
-            Register
-          </button>
-          <button
-            onClick={() => {
-              setMode('login');
-              setShowAuthModal(true);
-            }}
-            className="px-5 py-2.5 rounded-full bg-[#0ea5e9] hover:bg-sky-400 text-slate-950 font-black text-xs transition-all shadow-lg shadow-sky-500/30 cursor-pointer hover:scale-105"
-          >
-            Login
-          </button>
+            <button
+              onClick={() => {
+                setMode('login');
+                setShowAuthModal(true);
+              }}
+              className="px-5.5 py-2.5 rounded-full bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-black text-xs transition-all shadow-lg shadow-sky-500/35 cursor-pointer hover:scale-105"
+            >
+              Login
+            </button>
+          </div>
         </div>
       </header>
 
       {/* MAIN LANDING BODY SECTIONS */}
-      <main className="relative z-10 max-w-6xl mx-auto w-full px-4 py-8 space-y-28 flex-1">
+      <main className="relative z-10 max-w-6xl mx-auto w-full px-4 pt-28 pb-12 space-y-32 flex-1">
         {/* 1. HERO SECTION (#home) */}
         <section id="home" className="text-center space-y-6 max-w-4xl mx-auto pt-6 animate-slide-up">
           <div className="inline-flex items-center gap-2 bg-[#0b0e14] border border-sky-500/30 text-sky-400 text-xs font-black px-4 py-1.5 rounded-full shadow-xl">
