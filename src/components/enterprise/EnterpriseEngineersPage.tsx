@@ -24,6 +24,8 @@ import {
   Compass,
   Activity,
   Trash2,
+  Briefcase,
+  ExternalLink,
 } from 'lucide-react';
 
 interface EnterpriseEngineersPageProps {
@@ -117,6 +119,13 @@ export default function EnterpriseEngineersPage({ engineers, onTabChange }: Ente
       avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=120',
       lat: 51.5074,
       lng: -0.1278,
+      assignedJob: {
+        ref: 'TF-99281-UK',
+        title: 'Boiler Performance Audit & Service',
+        area: 'London W8 4PT',
+        priority: 'Emergency',
+        time: '14:30 Today',
+      },
     },
     {
       id: 'eng_2',
@@ -134,6 +143,7 @@ export default function EnterpriseEngineersPage({ engineers, onTabChange }: Ente
       avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=120',
       lat: 51.5174,
       lng: -0.1078,
+      assignedJob: null as any,
     },
     {
       id: 'eng_3',
@@ -151,6 +161,13 @@ export default function EnterpriseEngineersPage({ engineers, onTabChange }: Ente
       avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=120',
       lat: 53.4808,
       lng: -2.2426,
+      assignedJob: {
+        ref: 'TF-48291-UK',
+        title: '18th Edition Consumer Unit Replacement',
+        area: 'Manchester M1 1AE',
+        priority: 'Standard',
+        time: '16:00 Today',
+      },
     },
     {
       id: 'eng_4',
@@ -168,6 +185,7 @@ export default function EnterpriseEngineersPage({ engineers, onTabChange }: Ente
       avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=120',
       lat: 52.4862,
       lng: -1.8904,
+      assignedJob: null as any,
     },
   ]);
 
@@ -191,6 +209,7 @@ export default function EnterpriseEngineersPage({ engineers, onTabChange }: Ente
       avatar: newAvatar,
       lat: 51.5074,
       lng: -0.1278,
+      assignedJob: null as any,
     };
 
     setEngineerRoster([newEng, ...engineerRoster]);
@@ -210,10 +229,30 @@ export default function EnterpriseEngineersPage({ engineers, onTabChange }: Ente
     }
   };
 
-  const handleDispatchJob = async (jobRef: string, jobTitle: string) => {
+  const handleDispatchJob = async (jobRef: string, jobTitle: string, area: string, priority: string) => {
     if (!selectedAssignEngineer) return;
 
-    showToast(`Job #${jobRef} ("${jobTitle}") assigned & dispatched to ${selectedAssignEngineer.name}!`);
+    const updatedJob = {
+      ref: jobRef,
+      title: jobTitle,
+      area: area || 'London W8 4PT',
+      priority: priority || 'Emergency',
+      time: 'Now Dispatched',
+    };
+
+    setEngineerRoster(
+      engineerRoster.map((eng) =>
+        eng.id === selectedAssignEngineer.id
+          ? {
+              ...eng,
+              status: 'En Route',
+              assignedJob: updatedJob,
+            }
+          : eng
+      )
+    );
+
+    showToast(`Job #${jobRef} ("${jobTitle}") assigned & displayed on ${selectedAssignEngineer.name}'s card!`);
     setSelectedAssignEngineer(null);
 
     try {
@@ -242,7 +281,7 @@ export default function EnterpriseEngineersPage({ engineers, onTabChange }: Ente
     <div className="space-y-5">
       {/* Toast Notification Banner */}
       {toastMsg && (
-        <div className="fixed bottom-6 right-6 z-50 p-4 rounded-2xl bg-emerald-950 border border-emerald-500 text-emerald-200 text-xs font-bold flex items-center gap-2 shadow-2xl animate-in fade-in">
+        <div className="fixed bottom-6 right-6 z-50 p-4 rounded-2xl bg-emerald-950 border border-emerald-500 text-emerald-200 text-xs font-bold flex items-center gap-2 shadow-2xl animate-in fade-in max-w-md">
           <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
           <span>{toastMsg}</span>
         </div>
@@ -356,6 +395,39 @@ export default function EnterpriseEngineersPage({ engineers, onTabChange }: Ente
                   ))}
                 </div>
               </div>
+
+              {/* PROMINENT LIVE ASSIGNED JOB DISPLAY RECORD */}
+              <div className="p-3 rounded-2xl bg-[#0b0e14] border border-sky-500/30 space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-black uppercase text-sky-400 tracking-wider flex items-center gap-1">
+                    <Briefcase className="w-3 h-3 text-sky-400" /> CURRENT ASSIGNED JOB
+                  </span>
+                  {eng.assignedJob ? (
+                    <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-black text-[9px] uppercase border border-emerald-500/30">
+                      DISPATCHED
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-slate-500 font-bold">No Active Job</span>
+                  )}
+                </div>
+
+                {eng.assignedJob ? (
+                  <div className="text-xs">
+                    <div className="font-bold text-white flex items-center gap-1.5">
+                      <span className="font-mono text-sky-400">#{eng.assignedJob.ref}</span>
+                      <span>{eng.assignedJob.title}</span>
+                    </div>
+                    <div className="text-[11px] text-slate-400 mt-0.5 flex items-center justify-between">
+                      <span>{eng.assignedJob.area}</span>
+                      <span className="text-amber-400 font-bold">{eng.assignedJob.priority}</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-[11px] text-slate-400 font-medium italic">
+                    Click "Assign Job" below to dispatch a trade booking to this engineer.
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Vehicle & Metrics Footer */}
@@ -396,11 +468,11 @@ export default function EnterpriseEngineersPage({ engineers, onTabChange }: Ente
       {/* WORKING MODAL 1: ADD NEW ENGINEER MODAL WITH DIRECT PHOTO UPLOAD */}
       {showAddEngineerModal && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-[#121824] border border-[#1e293b] rounded-3xl p-6 shadow-2xl space-y-4 animate-in fade-in">
+          <div className="w-full max-w-md bg-[#121824] border border-[#1e293b] rounded-3xl p-6 shadow-2xl space-y-4 animate-in fade-in text-white">
             <div className="flex items-center justify-between border-b border-[#1e293b] pb-3">
               <div className="flex items-center gap-2">
                 <Wrench className="w-5 h-5 text-sky-400" />
-                <h3 className="font-black text-base text-white">Add New Certified Technician</h3>
+                <h3 className="font-black text-base">Add New Certified Technician</h3>
               </div>
               <button onClick={() => setShowAddEngineerModal(false)} className="p-1 text-slate-400 hover:text-white">
                 <X className="w-5 h-5" />
@@ -597,7 +669,7 @@ export default function EnterpriseEngineersPage({ engineers, onTabChange }: Ente
                   </div>
 
                   <button
-                    onClick={() => handleDispatchJob(j.ref, j.title)}
+                    onClick={() => handleDispatchJob(j.ref, j.title, j.area, j.priority)}
                     className="px-3.5 py-1.5 bg-[#0ea5e9] hover:bg-sky-400 text-slate-950 font-black rounded-lg text-xs transition-all shadow-md shrink-0"
                   >
                     Dispatch Now
