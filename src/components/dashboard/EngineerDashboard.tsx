@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Engineer, Booking, JobStatus } from '@/types';
 import LiveTrackingMap from '@/components/maps/LiveTrackingMap';
 import {
@@ -26,6 +26,8 @@ import {
   X,
   PlusCircle,
   ExternalLink,
+  Briefcase,
+  RefreshCw,
 } from 'lucide-react';
 
 interface EngineerDashboardProps {
@@ -37,12 +39,47 @@ interface EngineerDashboardProps {
 
 export default function EngineerDashboard({
   engineer,
-  bookings,
+  bookings: initialBookings,
   onUpdateJobStatus,
   isDark = true,
 }: EngineerDashboardProps) {
-  const assignedJobs = bookings.filter((b) => b.assignedEngineerId === engineer.id || b.assignedEngineerName === engineer.name) || bookings;
-  const activeJob = assignedJobs.find((b) => b.status !== 'completed' && b.status !== 'cancelled') || bookings[0];
+  const [bookingsList, setBookingsList] = useState<Booking[]>(initialBookings);
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
+
+  const fetchLiveBookingsFromMongoDB = async () => {
+    setIsLoading(true);
+    try {
+      const res = await fetch('/api/bookings');
+      const data = await res.json();
+      if (data.success && data.bookings) {
+        setBookingsList(data.bookings);
+      }
+    } catch (e) {
+      console.error('Error fetching bookings from MongoDB Atlas:', e);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchLiveBookingsFromMongoDB();
+  }, []);
+
+  // Filter jobs assigned to this engineer (or fallback to active uncompleted jobs if mock)
+  const assignedJobs = bookingsList.filter(
+    (b) =>
+      b.assignedEngineerId === engineer.id ||
+      b.assignedEngineerName === engineer.name ||
+      b.status === 'assigned' ||
+      b.status === 'en_route' ||
+      b.status === 'in_progress'
+  );
+
+  const activeJob =
+    assignedJobs.find((b) => b.id === selectedJobId) ||
+    assignedJobs.find((b) => b.status !== 'completed' && b.status !== 'cancelled') ||
+    bookingsList[0];
 
   const [materialName, setMaterialName] = useState('');
   const [materialCost, setMaterialCost] = useState('');
@@ -83,14 +120,30 @@ export default function EngineerDashboard({
     showToast(`Quick added ${name} (£${cost.toFixed(2)})`);
   };
 
-  const handleStatusChange = (newStatus: JobStatus) => {
+  const handleStatusChange = async (newStatus: JobStatus) => {
     if (activeJob) {
       onUpdateJobStatus(activeJob.id, newStatus, {
         materialsUsed: materialsList,
         engineerNotes,
         signatureUrl: signatureCaptured ? 'https://example.com/signature-captured.png' : undefined,
       });
-      showToast(`Job #${activeJob.bookingRef} status updated to ${newStatus.replace('_', ' ')}!`);
+
+      // Also update local list state immediately
+      setBookingsList(
+        bookingsList.map((b) => (b.id === activeJob.id ? { ...b, status: newStatus } : b))
+      );
+
+      showToast(`Job #${activeJob.bookingRef} status updated to ${newStatus.replace('_', ' ').toUpperCase()} in MongoDB Atlas!`);
+
+      try {
+        await fetch('/api/bookings', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: activeJob.id, status: newStatus }),
+        });
+      } catch (err) {
+        console.error('Job status save failed:', err);
+      }
     }
   };
 
@@ -128,6 +181,14 @@ export default function EngineerDashboard({
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={fetchLiveBookingsFromMongoDB}
+            className="p-2 rounded-xl bg-[#0b0e14] border border-[#1e293b] text-slate-300 hover:text-white transition-all flex items-center gap-1.5 text-xs font-bold"
+            title="Refresh MongoDB Atlas Assigned Jobs"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} /> Sync Jobs
+          </button>
+
           <button className="px-3.5 py-2 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold rounded-xl text-xs flex items-center gap-1.5 shadow-md">
             <Navigation className="w-3.5 h-3.5 animate-pulse" /> Live GPS Sharing Active
           </button>
@@ -163,8 +224,37 @@ export default function EngineerDashboard({
         </div>
       </div>
 
+      {/* ASSIGNED JOBS ROSTER TABS */}
+      {assignedJobs.length > 0 && (
+        <div className="p-4 rounded-2xl bg-[#121824] border border-[#1e293b] space-y-2">
+          <span className="text-[10px] font-black uppercase text-sky-400 tracking-wider flex items-center gap-1.5">
+            <Briefcase className="w-3.5 h-3.5" /> MY ASSIGNED DISPATCHED JOBS ({assignedJobs.length})
+          </span>
+
+          <div className="flex items-center gap-2 overflow-x-auto pb-1">
+            {assignedJobs.map((j) => (
+              <button
+                key={j.id}
+                onClick={() => setSelectedJobId(j.id)}
+                className={`px-3.5 py-2 rounded-xl text-xs font-extrabold flex items-center gap-2 whitespace-nowrap transition-all ${
+                  (activeJob && activeJob.id === j.id)
+                    ? 'bg-[#0ea5e9] text-slate-950 shadow-lg'
+                    : 'bg-[#0b0e14] text-slate-300 border border-[#1e293b] hover:text-white'
+                }`}
+              >
+                <span className="font-mono text-[11px]">#{j.bookingRef}</span>
+                <span>{j.serviceTitle}</span>
+                <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-slate-900/60 text-emerald-400">
+                  {j.status}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* ACTIVE FIELD WORKSTATION CARD */}
-      {activeJob && (
+      {activeJob ? (
         <div className="p-6 rounded-3xl bg-[#121824] border border-[#1e293b] space-y-6 shadow-2xl">
           {/* Header Bar */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#1e293b] pb-4">
@@ -173,12 +263,14 @@ export default function EngineerDashboard({
               <h2 className="text-xl font-black text-white mt-0.5">{activeJob.serviceTitle}</h2>
             </div>
 
-            <span className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider whitespace-nowrap ${
-              activeJob.status === 'completed'
-                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                : 'bg-sky-500/20 text-sky-400 border border-sky-500/30'
-            }`}>
-              STATUS: {activeJob.status.replace('_', ' ')}
+            <span
+              className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider whitespace-nowrap ${
+                activeJob.status === 'completed'
+                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                  : 'bg-sky-500/20 text-sky-400 border border-sky-500/30'
+              }`}
+            >
+              STATUS: {activeJob.status.replace('_', ' ').toUpperCase()}
             </span>
           </div>
 
@@ -253,191 +345,74 @@ export default function EngineerDashboard({
                 className={`py-3 rounded-xl font-black text-xs flex items-center justify-center gap-1.5 transition-all ${
                   activeJob.status === 'completed'
                     ? 'bg-emerald-500 text-slate-950 ring-2 ring-emerald-400 shadow-lg'
-                    : 'bg-[#0b0e14] text-slate-400 hover:text-white border border-[#1e293b]'
+                    : 'bg-emerald-600 hover:bg-emerald-500 text-white'
                 }`}
               >
                 <CheckCircle2 className="w-4 h-4" /> Complete Job
               </button>
             </div>
           </div>
-
-          {/* SCREWFIX / TOOLSTATION PARTS CATALOG & MATERIALS RECORDER */}
-          <div className="space-y-3 pt-4 border-t border-[#1e293b]">
-            <div className="flex items-center justify-between">
-              <h3 className="font-black text-sm text-white uppercase tracking-wider flex items-center gap-2">
-                <PackageCheck className="w-4 h-4 text-sky-400" /> Record Materials & Parts Used
-              </h3>
-              <span className="text-xs font-mono font-bold text-sky-400">Total: £{totalMaterialsCost.toFixed(2)}</span>
-            </div>
-
-            {/* Quick Catalog Bar */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
-              <span className="text-[10px] font-extrabold uppercase text-slate-400 shrink-0">Quick Add:</span>
-              <button
-                onClick={() => handleQuickAddPart('Vaillant Pressure Sensor', 35.0)}
-                className="px-2.5 py-1 rounded-lg bg-[#0b0e14] border border-[#1e293b] text-slate-300 hover:text-white whitespace-nowrap"
-              >
-                + Pressure Sensor (£35)
-              </button>
-              <button
-                onClick={() => handleQuickAddPart('15mm Copper Pipe 2m', 18.5)}
-                className="px-2.5 py-1 rounded-lg bg-[#0b0e14] border border-[#1e293b] text-slate-300 hover:text-white whitespace-nowrap"
-              >
-                + Copper Pipe 2m (£18.50)
-              </button>
-              <button
-                onClick={() => handleQuickAddPart('100A Main Switch Fuse', 28.0)}
-                className="px-2.5 py-1 rounded-lg bg-[#0b0e14] border border-[#1e293b] text-slate-300 hover:text-white whitespace-nowrap"
-              >
-                + 100A Switch Fuse (£28)
-              </button>
-            </div>
-
-            <div className="flex gap-2">
-              <input
-                type="text"
-                placeholder="Material description (e.g. Screwfix 22mm Compression Elbow)"
-                value={materialName}
-                onChange={(e) => setMaterialName(e.target.value)}
-                className="flex-1 px-4 py-2.5 rounded-xl bg-[#0b0e14] border border-[#1e293b] text-white text-xs font-semibold outline-none focus:border-sky-500"
-              />
-              <input
-                type="number"
-                placeholder="Cost (£)"
-                value={materialCost}
-                onChange={(e) => setMaterialCost(e.target.value)}
-                className="w-28 px-3 py-2.5 rounded-xl bg-[#0b0e14] border border-[#1e293b] text-white text-xs font-semibold outline-none focus:border-sky-500"
-              />
-              <button
-                onClick={handleAddMaterial}
-                className="px-4 py-2.5 bg-[#0ea5e9] hover:bg-sky-400 text-slate-950 font-black rounded-xl text-xs flex items-center gap-1 shadow-md"
-              >
-                <Plus className="w-4 h-4" /> Add Part
-              </button>
-            </div>
-
-            {materialsList.length > 0 && (
-              <div className="p-3.5 rounded-2xl bg-[#0b0e14] border border-[#1e293b] space-y-1.5 text-xs">
-                {materialsList.map((m, idx) => (
-                  <div key={idx} className="flex justify-between font-bold text-slate-200">
-                    <span>{m.name}</span>
-                    <span className="font-mono text-sky-400">£{m.cost.toFixed(2)}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* SITE PHOTOS & DIGITAL SIGNATURE */}
-          <div className="grid md:grid-cols-2 gap-4 pt-4 border-t border-[#1e293b]">
-            {/* Photo Upload Gallery */}
-            <div className="space-y-2">
-              <label className="block text-[11px] font-black uppercase text-slate-400 tracking-wider">
-                SITE PHOTOS (BEFORE & AFTER)
-              </label>
-              <div className="flex gap-2">
-                {photosUploaded.map((src, i) => (
-                  <img
-                    key={i}
-                    src={src}
-                    alt="Site Photo"
-                    className="w-20 h-20 rounded-xl object-cover border border-[#1e293b] shadow-md"
-                  />
-                ))}
-                <button
-                  onClick={() => {
-                    setPhotosUploaded([
-                      ...photosUploaded,
-                      'https://images.unsplash.com/photo-1504307651254-35680f356dfd?q=80&w=300',
-                    ]);
-                    showToast('Captured and uploaded new site photo!');
-                  }}
-                  className="w-20 h-20 rounded-xl bg-[#0b0e14] border border-dashed border-[#1e293b] hover:border-sky-500 flex flex-col items-center justify-center text-slate-400 hover:text-white transition-all text-[10px] font-bold gap-1"
-                >
-                  <Camera className="w-4 h-4 text-sky-400" /> Upload
-                </button>
-              </div>
-            </div>
-
-            {/* Digital Signature Sign-Off Pad */}
-            <div className="space-y-2">
-              <label className="block text-[11px] font-black uppercase text-slate-400 tracking-wider">
-                DIGITAL CUSTOMER SIGN-OFF
-              </label>
-              <div
-                onClick={() => {
-                  setSignatureCaptured(!signatureCaptured);
-                  showToast(!signatureCaptured ? 'Customer digital signature captured!' : 'Signature reset.');
-                }}
-                className={`h-20 rounded-2xl border-2 border-dashed flex items-center justify-center cursor-pointer transition-all ${
-                  signatureCaptured
-                    ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400'
-                    : 'border-[#1e293b] bg-[#0b0e14] text-slate-400 hover:border-sky-500'
-                }`}
-              >
-                {signatureCaptured ? (
-                  <div className="flex items-center gap-2 font-black text-xs">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-400" /> Customer Signature Verified & Saved!
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2 text-xs font-bold">
-                    <PenTool className="w-4 h-4 text-sky-400" /> Click to Capture Digital Customer Signature
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+        </div>
+      ) : (
+        <div className="p-12 text-center rounded-3xl bg-[#121824] border border-[#1e293b] text-slate-400 space-y-2">
+          <Briefcase className="w-12 h-12 text-slate-500 mx-auto" />
+          <h3 className="text-lg font-black text-white">No Assigned Jobs</h3>
+          <p className="text-xs">You currently have no dispatched active jobs. Click "Sync Jobs" to check MongoDB Atlas.</p>
         </div>
       )}
 
-      {/* WORKING LIVE GPS NAVIGATION MODAL DRAWER */}
+      {/* GPS NAVIGATION MODAL */}
       {showNavigationModal && activeJob && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="w-full max-w-2xl bg-[#121824] border border-[#1e293b] rounded-3xl p-6 shadow-2xl space-y-4 animate-in fade-in">
+          <div className="w-full max-w-xl bg-[#121824] border border-[#1e293b] rounded-3xl p-6 shadow-2xl space-y-4 text-white animate-in fade-in">
             <div className="flex items-center justify-between border-b border-[#1e293b] pb-3">
               <div className="flex items-center gap-2">
                 <Navigation className="w-5 h-5 text-emerald-400 animate-pulse" />
-                <h3 className="font-black text-base text-white">Google Maps Live GPS Navigation - Job #{activeJob.bookingRef}</h3>
+                <h3 className="font-black text-base">GPS Navigation to Customer Property</h3>
               </div>
-              <button onClick={() => setShowNavigationModal(null as any)} className="p-1 text-slate-400 hover:text-white">
+              <button onClick={() => setShowNavigationModal(false)} className="p-1 text-slate-400 hover:text-white">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <div className="h-64 rounded-2xl overflow-hidden border border-[#1e293b] relative">
               <LiveTrackingMap
-                booking={{
-                  id: activeJob.id,
-                  bookingRef: activeJob.bookingRef,
-                  customerName: activeJob.customerName,
-                  customerPhone: activeJob.customerPhone,
-                  postcode: activeJob.postcode,
-                  assignedEngineerId: engineer.id,
-                  assignedEngineerName: engineer.name,
-                  assignedEngineerVehicle: engineer.vehicleRegistration,
-                  assignedEngineerPhone: engineer.phone,
-                  etaMins: 12,
-                  lat: 51.5074,
-                  lng: -0.1278,
-                } as any}
-                engineers={[engineer]}
+                engineers={[
+                  {
+                    id: engineer.id,
+                    businessId: 'biz_01',
+                    name: engineer.name,
+                    role: 'engineer',
+                    email: engineer.email || 'engineer@weic.co.uk',
+                    phone: engineer.phone || '+44 7911 123456',
+                    avatar: engineer.avatar,
+                    skills: ['Gas Safe'],
+                    certifications: ['Certified'],
+                    vehicleRegistration: engineer.vehicleRegistration || 'WEIC 882',
+                    isAvailable: false,
+                    currentLat: 51.5074,
+                    currentLng: -0.1278,
+                    rating: engineer.rating || 4.98,
+                    completedJobsCount: 142,
+                    createdAt: '2026-01-01',
+                  },
+                ]}
                 height="h-64"
               />
             </div>
 
-            <div className="flex justify-between items-center text-xs pt-2">
-              <div className="space-y-0.5">
-                <div className="font-black text-white">{activeJob.customerName} ({activeJob.address})</div>
-                <div className="text-emerald-400 font-mono font-bold">2.4 Miles Away &bull; 12 Mins Remaining</div>
+            <div className="p-3.5 rounded-2xl bg-[#0b0e14] border border-[#1e293b] flex items-center justify-between text-xs">
+              <div>
+                <span className="text-[10px] text-slate-400 font-extrabold uppercase block">Destination Address</span>
+                <span className="font-bold text-white mt-0.5 block">{activeJob.address}, {activeJob.postcode}</span>
               </div>
-
               <a
-                href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(activeJob.address)}`}
+                href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(activeJob.address + ' ' + activeJob.postcode)}`}
                 target="_blank"
                 rel="noreferrer"
-                className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-xl flex items-center gap-1.5 shadow-md"
+                className="px-3.5 py-2 bg-[#0ea5e9] hover:bg-sky-400 text-slate-950 font-black rounded-xl text-xs flex items-center gap-1.5 shadow-md"
               >
-                Open Google Maps App <ExternalLink className="w-3.5 h-3.5" />
+                <ExternalLink className="w-3.5 h-3.5" /> Open Google Maps
               </a>
             </div>
           </div>
